@@ -211,14 +211,14 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 	 * @see #loadBeanDefinitions(org.springframework.core.io.Resource[])
 	 */
 	public int loadBeanDefinitions(String location, @Nullable Set<Resource> actualResources) throws BeanDefinitionStoreException {
-		ResourceLoader resourceLoader = getResourceLoader();
+		ResourceLoader resourceLoader = getResourceLoader();//获取解析的资源 将配置文件转换为Resource对象
 		if (resourceLoader == null) {
-			throw new BeanDefinitionStoreException(
+			throw new BeanDefinitionStoreException(//无法从位置加载 bean 定义  没有可用的资源加载器
 					"Cannot load bean definitions from location [" + location + "]: no ResourceLoader available");
 		}
 
 		if (resourceLoader instanceof ResourcePatternResolver) {
-			// Resource pattern matching available.
+			// Resource pattern matching available.  资源模式匹配可用。
 			try {
 				Resource[] resources = ((ResourcePatternResolver) resourceLoader).getResources(location);
 				int count = loadBeanDefinitions(resources);
@@ -235,7 +235,7 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 						"Could not resolve bean definition resource pattern [" + location + "]", ex);
 			}
 		}
-		else {
+		else {//只能通过绝对 URL 加载单个资源。
 			// Can only load single resources by absolute URL.
 			Resource resource = resourceLoader.getResource(location);
 			int count = loadBeanDefinitions(resource);
@@ -256,7 +256,7 @@ public abstract class AbstractBeanDefinitionReader implements BeanDefinitionRead
 		for (String location : locations) {
 			count += loadBeanDefinitions(location);
 		}
-		return count;
+		return count;//最后返回加载的所有BeanDefinition的数量
 	}
 
 }

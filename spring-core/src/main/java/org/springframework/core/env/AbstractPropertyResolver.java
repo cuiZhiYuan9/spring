@@ -61,7 +61,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	@Nullable
 	private String valueSeparator = SystemPropertyUtils.VALUE_SEPARATOR;
 
-	private final Set<String> requiredProperties = new LinkedHashSet<>();
+	private final Set<String> requiredProperties = new LinkedHashSet<>();//要验证的属性
 
 
 	@Override
@@ -140,6 +140,11 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 		Collections.addAll(this.requiredProperties, requiredProperties);
 	}
 
+	/**
+	 * 基于这个特性我们可以做一些扩展，提前在集合`requiredProperties`中
+	 * 放入我们这个项目必须存在的一些环境变量。假说我们的生产环境数据库地址、用户名和密码都是使用环境变量的方式注入进去来代替测试环境的配置，
+	 * 那么就可以在这里添加这个校验，在程序刚启动的时候就能发现问题
+	 */
 	@Override
 	public void validateRequiredProperties() {
 		MissingRequiredPropertiesException ex = new MissingRequiredPropertiesException();

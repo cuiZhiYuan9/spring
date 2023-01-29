@@ -100,18 +100,20 @@ abstract public class AbstractClassGenerator<T> implements ClassGenerator {
 		};
 
 		public ClassLoaderData(ClassLoader classLoader) {
+			// 判断不为空
 			if (classLoader == null) {
 				throw new IllegalArgumentException("classLoader == null is not yet supported");
 			}
+			//设置类加载器，弱引用
 			this.classLoader = new WeakReference<ClassLoader>(classLoader);
+			// 新建一个回调函数 这个函数作用在与缓存中没获取到值是，调用传入的生成代理类并返回
 			Function<AbstractClassGenerator, Object> load =
-					new Function<AbstractClassGenerator, Object>() {
-						public Object apply(AbstractClassGenerator gen) {
-							Class klass = gen.generate(ClassLoaderData.this);
-							return gen.wrapCachedClass(klass);
-						}
+					gen -> {
+						Class klass = gen.generate(ClassLoaderData.this);
+						return gen.wrapCachedClass(klass);
 					};
-			generatedClasses = new LoadingCache<AbstractClassGenerator, Object, Object>(GET_KEY, load);
+			// 为这个classLocalData新建一个缓存类
+			generatedClasses = new LoadingCache<>(GET_KEY, load);
 		}
 
 		public ClassLoader getClassLoader() {
@@ -127,11 +129,14 @@ abstract public class AbstractClassGenerator<T> implements ClassGenerator {
 		}
 
 		public Object get(AbstractClassGenerator gen, boolean useCache) {
+			// 不使用缓存
 			if (!useCache) {
 				return gen.generate(ClassLoaderData.this);
 			}
 			else {
+				// 传入代理类生成器，并根据代理类生成器获取值
 				Object cachedValue = generatedClasses.get(gen);
+				// 解包装
 				return gen.unwrapCachedValue(cachedValue);
 			}
 		}
@@ -300,22 +305,33 @@ abstract public class AbstractClassGenerator<T> implements ClassGenerator {
 
 	protected Object create(Object key) {
 		try {
+			// 获取到当前生成器的类加载器
 			ClassLoader loader = getClassLoader();
+			// 当前类加载器对应的缓存，缓存为key为类加载器，缓存的value为classLoaderDate
+			// 有2个函数式接口 一个使返回gen_key,还有一个使为了创建具体的class
 			Map<ClassLoader, ClassLoaderData> cache = CACHE;
+			// 先从缓存中获取下当前类加载器所有加载过的类
 			ClassLoaderData data = cache.get(loader);
+			// 如果为空
 			if (data == null) {
 				synchronized (AbstractClassGenerator.class) {
 					cache = CACHE;
 					data = cache.get(loader);
 					if (data == null) {
+						// 新建一个缓存的Cache,
 						Map<ClassLoader, ClassLoaderData> newCache = new WeakHashMap<ClassLoader, ClassLoaderData>(cache);
+						// 新建一个当前加载器对应的classLoaderData并加入到缓存中，但此时还没有数据
 						data = new ClassLoaderData(loader);
 						newCache.put(loader, data);
+						// 刷新缓存
 						CACHE = newCache;
 					}
 				}
 			}
+			// 设置一个全局key
 			this.key = key;
+			// 在刚刚创建的data(classLoaderData)中调用get方法
+			// 以及是否使用缓存标识    System.getProperty("cglib.useCache","true")
 			Object obj = data.get(this, getUseCache());
 			if (obj instanceof Class) {
 				return firstInstance((Class) obj);

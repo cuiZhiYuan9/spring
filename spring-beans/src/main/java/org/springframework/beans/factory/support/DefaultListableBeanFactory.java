@@ -145,7 +145,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	private String serializationId;
 
 	/** Whether to allow re-registration of a different definition with the same name. */
-	private boolean allowBeanDefinitionOverriding = true;
+	private boolean allowBeanDefinitionOverriding = true;//允许被覆盖
 
 	/** Whether to allow eager class loading even for lazy-init beans. */
 	private boolean allowEagerClassLoading = true;
@@ -206,7 +206,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	 * Specify an id for serialization purposes, allowing this BeanFactory to be
 	 * deserialized from this id back into the BeanFactory object, if needed.
 	 */
-	public void setSerializationId(@Nullable String serializationId) {
+	public void setSerializationId(@Nullable String serializationId) {//设置序列化 ID
 		if (serializationId != null) {
 			serializableFactories.put(serializationId, new WeakReference<>(this));
 		}
@@ -227,6 +227,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	}
 
 	/**
+	 * 设置允许 Bean 定义覆盖
 	 * Set whether it should be allowed to override bean definitions by registering
 	 * a different definition with the same name, automatically replacing the former.
 	 * If not, an exception will be thrown. This also applies to overriding aliases.
@@ -238,6 +239,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	}
 
 	/**
+	 * 是否被覆盖了
 	 * Return whether it should be allowed to override bean definitions by registering
 	 * a different definition with the same name, automatically replacing the former.
 	 * @since 4.1.2
@@ -247,6 +249,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	}
 
 	/**
+	 * 设置是否允许工厂急切地加载 bean 类，即使对于标记为“lazy-init”的 bean 定义也是如此。
+	 * 默认为“真”。关闭此标志以禁止延迟初始化 bean 的类加载，除非明确请求此类 bean。特别是，
+	 * 按类型查找将简单地忽略没有解析类名的 bean 定义，而不是按需加载 bean 类来执行类型检查
 	 * Set whether the factory is allowed to eagerly load bean classes
 	 * even for bean definitions that are marked as "lazy-init".
 	 * <p>Default is "true". Turn this flag off to suppress class loading
@@ -261,6 +266,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	}
 
 	/**
+	 * 返回是否允许工厂急切地加载 bean 类，即使对于标记为“lazy-init”的 bean 定义也是如此
 	 * Return whether the factory is allowed to eagerly load bean classes
 	 * even for bean definitions that are marked as "lazy-init".
 	 * @since 4.1.2
@@ -865,17 +871,29 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		if (logger.isTraceEnabled()) {
 			logger.trace("Pre-instantiating singletons in " + this);
 		}
-
+		//beanDefinitionNames 这里保存了 beanFactory 解析出的beanDefinition
 		// Iterate over a copy to allow for init methods which in turn register new bean definitions.
 		// While this may not be part of the regular factory bootstrap, it does otherwise work fine.
 		List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
 
 		// Trigger initialization of all non-lazy singleton beans...
 		for (String beanName : beanNames) {
+			// getMergedLocalBeanDefinition（）在实例化之前，要把所有的基础的beanDefinition对象装换成RootBeanDefinition对象，进行缓存，后续需要实例化时
+			// 接获取定义信息，二定义信息中如果包换父类那么必须先创建父类在创建子类 这里会调用
+			//  在BeanFactoryPostProcessor处理时会第一次调用，会帮我们第一次创建，并且缓存
+			// 合并父 Bean 中的配置，主意<bean id="" class="" parent="" /> 中的 parent属性
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
+			// 不是抽象类、是单例的且不是懒加载的 才会加载
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
+				//TODO 这里是处理FactoryBean的  理解一下factoryBean 和BeanFactory 的区别   常规是factoryBean
+				/*
+				 * 当使用了factoryBean接口来创建对象的时候，我们一共创建了2个对象，一个是实现了factoryBean接口的对象 一个是通过getObject()返回的对象
+				 * 这2个对象都有spring来管理但是 实现了factoryBean的bean对象·是放在一级缓存，
+				 * getObject（）获取的对象在factoryBeanObjectCache集合
+				 * 如果他是不是单例的，那么spring就不会为我们管理这个对象，缓存中不会保存这个对象
+				 */
 				if (isFactoryBean(beanName)) {
-					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
+					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);//在 beanName 前面加上“&” 符号
 					if (bean instanceof FactoryBean) {
 						FactoryBean<?> factory = (FactoryBean<?>) bean;
 						boolean isEagerInit;
@@ -893,12 +911,12 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						}
 					}
 				}
-				else {
+				else { // 不是FactoryBean的直接使用此方法进行初始化
 					getBean(beanName);
 				}
 			}
 		}
-
+		// 如果bean实现了 SmartInitializingSingleton 接口的，那么在这里得到回调
 		// Trigger post-initialization callback for all applicable beans...
 		for (String beanName : beanNames) {
 			Object singletonInstance = getSingleton(beanName);
@@ -938,14 +956,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						"Validation of bean definition failed", ex);
 			}
 		}
-
+		// 所有的 Bean 注册后都会被放入到这个beanDefinitionMap 中，查看是否已存在这个bean
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
 		if (existingDefinition != null) {
-			if (!isAllowBeanDefinitionOverriding()) {
+			if (!isAllowBeanDefinitionOverriding()) {// 如果不允许覆盖的话，抛异常
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
 			}
 			else if (existingDefinition.getRole() < beanDefinition.getRole()) {
-				// e.g. was ROLE_APPLICATION, now overriding with ROLE_SUPPORT or ROLE_INFRASTRUCTURE
+				// e.g. was ROLE_APPLICATION, now overriding with ROLE_SUPPORT or ROLE_INFRASTRUCTURE  用框架定义的 Bean 覆盖用户自定义的 Bean
 				if (logger.isInfoEnabled()) {
 					logger.info("Overriding user-defined bean definition for bean '" + beanName +
 							"' with a framework-generated bean definition: replacing [" +
@@ -953,14 +971,14 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			}
 			else if (!beanDefinition.equals(existingDefinition)) {
-				if (logger.isDebugEnabled()) {
+				if (logger.isDebugEnabled()) {// 用新的 Bean 覆盖旧的 Bean
 					logger.debug("Overriding bean definition for bean '" + beanName +
 							"' with a different definition: replacing [" + existingDefinition +
 							"] with [" + beanDefinition + "]");
 				}
 			}
 			else {
-				if (logger.isTraceEnabled()) {
+				if (logger.isTraceEnabled()) { // log...用同等的 Bean 覆盖旧的 Bean
 					logger.trace("Overriding bean definition for bean '" + beanName +
 							"' with an equivalent definition: replacing [" + existingDefinition +
 							"] with [" + beanDefinition + "]");
@@ -969,7 +987,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			this.beanDefinitionMap.put(beanName, beanDefinition);
 		}
 		else {
-			if (hasBeanCreationStarted()) {
+			if (hasBeanCreationStarted()) { // 判断是否已经有其他的 Bean 开始初始化了.注意，"注册Bean" 这个动作结束，Bean 依然还没有初始化 在 Spring 容器启动的最后，会 预初始化 所有的 singleton beans
 				// Cannot modify startup-time collection elements anymore (for stable iteration)
 				synchronized (this.beanDefinitionMap) {
 					this.beanDefinitionMap.put(beanName, beanDefinition);
@@ -981,10 +999,10 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			}
 			else {
-				// Still in startup registration phase
+				// Still in startup registration phase  将 BeanDefinition 放到这个 map 中，这个 map 保存了所有的 BeanDefinition
 				this.beanDefinitionMap.put(beanName, beanDefinition);
-				this.beanDefinitionNames.add(beanName);
-				removeManualSingletonName(beanName);
+				this.beanDefinitionNames.add(beanName);// 这是个 ArrayList，所以会按照 bean 配置的顺序保存每一个注册的 Bean 的名字
+				removeManualSingletonName(beanName);// 这是个 LinkedHashSet，代表的是手动注册的 singleton bean，
 			}
 			this.frozenBeanDefinitionNames = null;
 		}
@@ -1208,22 +1226,30 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	@Nullable
 	public Object resolveDependency(DependencyDescriptor descriptor, @Nullable String requestingBeanName,
 			@Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException {
-
+		// 获取工厂的参数名发现器，    设置到descriptor中 ，使的descriptor初始化基础方法参数的参数名发现，此时，该方法实际上
+		// 并没有尝试检索参数名称 ，他仅允许发现在相应程序调用getDependencyName发生
 		descriptor.initParameterNameDiscovery(getParameterNameDiscoverer());
+		// 如果是Optional
 		if (Optional.class == descriptor.getDependencyType()) {
+			// 创建符合Optional类型的符合descriptor  要求的候选bean
 			return createOptionalDependency(descriptor, requestingBeanName);
 		}
+		// 如果是对象工厂剋行，或者对象提供着
 		else if (ObjectFactory.class == descriptor.getDependencyType() ||
 				ObjectProvider.class == descriptor.getDependencyType()) {
+			//DependencyObjectProvider 依赖对象提供者，用于延迟解析依赖项
 			return new DependencyObjectProvider(descriptor, requestingBeanName);
 		}
+		// javaxInjectProviderClass 有可能导致空指针 static块 导致
 		else if (javaxInjectProviderClass == descriptor.getDependencyType()) {
 			return new Jsr330Factory().createDependencyProvider(descriptor, requestingBeanName);
 		}
 		else {
+			// 尝试获取延迟加载代理对象  懒加载使用
 			Object result = getAutowireCandidateResolver().getLazyResolutionProxyIfNecessary(
 					descriptor, requestingBeanName);
 			if (result == null) {
+				// 解析出 与descriptor 所包含的对象匹配的候选者bean对象
 				result = doResolveDependency(descriptor, requestingBeanName, autowiredBeanNames, typeConverter);
 			}
 			return result;
@@ -1233,25 +1259,38 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	@Nullable
 	public Object doResolveDependency(DependencyDescriptor descriptor, @Nullable String beanName,
 			@Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException {
-
+		// 设置新的切入点对象，得到旧的当前切入点对象
 		InjectionPoint previousInjectionPoint = ConstructorResolver.setCurrentInjectionPoint(descriptor);
 		try {
+			// 尝试使用descriptor 的快捷方法得到最近的候选的bean对象
+			// resolveShortcut   解决针对给定工厂的这种依赖关系的快捷方式，例如 考虑一些预先解决的信息
+			// 尝试调用该工厂解决 这种依赖关系的快捷方式来获取beanName 对应的bean对象 默认返回null
+			// 获取针对该工厂的这种依赖关系的快捷解析最佳的候选bean对象
 			Object shortcut = descriptor.resolveShortcut(this);
+			// 如果shortcut不为空返回
 			if (shortcut != null) {
 				return shortcut;
 			}
-
+			// 获取依赖类型
 			Class<?> type = descriptor.getDependencyType();
+			// 尝试使用BeamFactory的自动装配候选解析器获取descriptor的默认值
 			Object value = getAutowireCandidateResolver().getSuggestedValue(descriptor);
+			// 如果不为空
 			if (value != null) {
+				// String ?
 				if (value instanceof String) {
+					// 解析嵌套的值（ 如果是表达式会解析出该表达式的值）
 					String strVal = resolveEmbeddedValue((String) value);
+					// 获取beanName 的合并后的RootBeanDefintion
 					BeanDefinition bd = (beanName != null && containsBean(beanName) ?
 							getMergedBeanDefinition(beanName) : null);
+					// 评估bd中包含的value ,如果strValue是可解析的表达式会对其刷新
 					value = evaluateBeanDefinitionString(strVal, bd);
 				}
+				// 如果类型转换器没有自定义的 使用工厂的类型转化器
 				TypeConverter converter = (typeConverter != null ? typeConverter : getTypeConverter());
 				try {
+					// 转换为对应的type实例对象
 					return converter.convertIfNecessary(value, type, descriptor.getTypeDescriptor());
 				}
 				catch (UnsupportedOperationException ex) {
@@ -1262,13 +1301,18 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			}
 
+			// 尝试针对descriptor 所包装的对象类型是 [steam , 数组， collection类型且对象类型是接口，map的情况]     及逆行解析与依赖类型匹配的候选bean对象
+			// 并封装成 相应的依赖类型对象
 			Object multipleBeans = resolveMultipleBeans(descriptor, beanName, autowiredBeanNames, typeConverter);
 			if (multipleBeans != null) {
 				return multipleBeans;
 			}
-
+			// 尝试与type匹配的唯一候选bean对象
+			// 查找与type匹配的候选bean对象，构建成map ，key bean名 ，value bean对象
 			Map<String, Object> matchingBeans = findAutowireCandidates(beanName, type, descriptor);
+			// 如果没有
 			if (matchingBeans.isEmpty()) {
+				// 如果descriptor需要注入   直接报异常
 				if (isRequired(descriptor)) {
 					raiseNoMatchingBeanFound(type, descriptor.getResolvableType(), descriptor);
 				}
@@ -1484,11 +1528,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 				}
 			}
 		}
+		// 自定义处理
 		for (String candidate : candidateNames) {
 			if (!isSelfReference(beanName, candidate) && isAutowireCandidate(candidate, descriptor)) {
 				addCandidateEntry(result, candidate, descriptor, requiredType);
 			}
 		}
+		// 空的处理
 		if (result.isEmpty()) {
 			boolean multiple = indicatesMultipleBeans(requiredType);
 			// Consider fallback matches if the first pass failed to find anything...

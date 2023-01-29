@@ -116,37 +116,50 @@ public abstract class AopProxyUtils {
 	 * @see DecoratingProxy
 	 */
 	static Class<?>[] completeProxiedInterfaces(AdvisedSupport advised, boolean decoratingProxy) {
+		// 获取 AdvisedSupport 类型中的目标接口
 		Class<?>[] specifiedInterfaces = advised.getProxiedInterfaces();
+		// 如果目标类没有实现接口
 		if (specifiedInterfaces.length == 0) {
 			// No user-specified interfaces: check whether target class is an interface.
+			// 获取目标类
 			Class<?> targetClass = advised.getTargetClass();
 			if (targetClass != null) {
 				if (targetClass.isInterface()) {
+					// 如果目标是接口，则把目标类添加到AdvisedSupport 接口集合中
 					advised.setInterfaces(targetClass);
 				}
+				// 如果是proxy类型
 				else if (Proxy.isProxyClass(targetClass)) {
 					advised.setInterfaces(targetClass.getInterfaces());
 				}
 				specifiedInterfaces = advised.getProxiedInterfaces();
 			}
 		}
+		// 接口中有没有添加SpringProxy类型的接口
 		boolean addSpringProxy = !advised.isInterfaceProxied(SpringProxy.class);
+		// 是否需要添加 SpringProxy接口
 		boolean addAdvised = !advised.isOpaque() && !advised.isInterfaceProxied(Advised.class);
+		// isOpaque 代表生成的代理是否避免转换为Advise类型，默认为false 如果目标类型没有实现 Advised接口
 		boolean addDecoratingProxy = (decoratingProxy && !advised.isInterfaceProxied(DecoratingProxy.class));
 		int nonUserIfcCount = 0;
+		// 是否需要添加SpringProxy接口
 		if (addSpringProxy) {
 			nonUserIfcCount++;
 		}
+		// 是否需要添加Advised
 		if (addAdvised) {
 			nonUserIfcCount++;
 		}
+		// 是否需要添加DecoratingProxy
 		if (addDecoratingProxy) {
 			nonUserIfcCount++;
 		}
+		// 扩展接口数组
 		Class<?>[] proxiedInterfaces = new Class<?>[specifiedInterfaces.length + nonUserIfcCount];
 		System.arraycopy(specifiedInterfaces, 0, proxiedInterfaces, 0, specifiedInterfaces.length);
 		int index = specifiedInterfaces.length;
 		if (addSpringProxy) {
+			// 添加SpringProxy
 			proxiedInterfaces[index] = SpringProxy.class;
 			index++;
 		}

@@ -52,7 +52,7 @@ import org.springframework.util.Assert;
 public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContext {
 
 	@Nullable
-	private Resource[] configResources;
+	private Resource[] configResources;//文件数组
 
 
 	/**
@@ -137,7 +137,7 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	public ClassPathXmlApplicationContext(
 			String[] configLocations, boolean refresh, @Nullable ApplicationContext parent)
 			throws BeansException {
-
+		// 创建相关对象的初始化工作
 		super(parent);
 		setConfigLocations(configLocations);
 		if (refresh) {

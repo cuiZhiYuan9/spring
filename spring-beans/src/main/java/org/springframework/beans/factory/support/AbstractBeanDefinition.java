@@ -71,19 +71,21 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 */
 	public static final int AUTOWIRE_NO = AutowireCapableBeanFactory.AUTOWIRE_NO;
 
-	/**
+	/**根据 Bean 的类型进行自动装配，byName
 	 * Constant that indicates autowiring bean properties by name.
 	 * @see #setAutowireMode
 	 */
 	public static final int AUTOWIRE_BY_NAME = AutowireCapableBeanFactory.AUTOWIRE_BY_NAME;
 
 	/**
+	 * 根据 Bean 的名字进行自动装配，byType
 	 * Constant that indicates autowiring bean properties by type.
 	 * @see #setAutowireMode
 	 */
 	public static final int AUTOWIRE_BY_TYPE = AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE;
 
 	/**
+	 *
 	 * Constant that indicates autowiring a constructor.
 	 * @see #setAutowireMode
 	 */
@@ -139,24 +141,24 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 
 
 	@Nullable
-	private volatile Object beanClass;
+	private volatile Object beanClass;//存放bean的class对象
 
 	@Nullable
-	private String scope = SCOPE_DEFAULT;
+	private String scope = SCOPE_DEFAULT;//Bean 的作用范围
 
-	private boolean abstractFlag = false;
-
-	@Nullable
-	private Boolean lazyInit;
-
-	private int autowireMode = AUTOWIRE_NO;
-
-	private int dependencyCheck = DEPENDENCY_CHECK_NONE;
+	private boolean abstractFlag = false;//是否是抽象的
 
 	@Nullable
-	private String[] dependsOn;
+	private Boolean lazyInit;// 延迟加载
 
-	private boolean autowireCandidate = true;
+	private int autowireMode = AUTOWIRE_NO;//默认不自动装配
+
+	private int dependencyCheck = DEPENDENCY_CHECK_NONE;//默认不检查依赖
+
+	@Nullable
+	private String[] dependsOn;//依赖的bean
+
+	private boolean autowireCandidate = true;// 可以作为自动装配的候选者，意味着可以自动装配到其他 Bean 的某个属性中
 
 	private boolean primary = false;
 
@@ -170,38 +172,38 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	private boolean lenientConstructorResolution = true;
 
 	@Nullable
-	private String factoryBeanName;
+	private String factoryBeanName;//创建当前bean工厂的名称
 
 	@Nullable
-	private String factoryMethodName;
+	private String factoryMethodName;//创建当前bean的方法名称
 
 	@Nullable
-	private ConstructorArgumentValues constructorArgumentValues;
+	private ConstructorArgumentValues constructorArgumentValues;//存储构造方法的参数
 
 	@Nullable
-	private MutablePropertyValues propertyValues;
+	private MutablePropertyValues propertyValues;//存储 Bean 属性名称以及对应的值
 
 	private MethodOverrides methodOverrides = new MethodOverrides();
 
 	@Nullable
-	private String initMethodName;
+	private String initMethodName;//init方法的名称
 
 	@Nullable
-	private String destroyMethodName;
+	private String destroyMethodName;//销毁方法的名称
 
-	private boolean enforceInitMethod = true;
+	private boolean enforceInitMethod = true;//强制执行init方法
 
-	private boolean enforceDestroyMethod = true;
+	private boolean enforceDestroyMethod = true;//强制执行销毁方法
 
-	private boolean synthetic = false;
+	private boolean synthetic = false;//Bean 是否是用户定义的而不是应用程序本身定义的
 
-	private int role = BeanDefinition.ROLE_APPLICATION;
-
-	@Nullable
-	private String description;
+	private int role = BeanDefinition.ROLE_APPLICATION;//Bean 的身份类别，默认是用户定义的 Bean
 
 	@Nullable
-	private Resource resource;
+	private String description;//Bean描述信息
+
+	@Nullable
+	private Resource resource;////Bean 定义的资源
 
 
 	/**
@@ -465,7 +467,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 		String className = getBeanClassName();
 		if (className == null) {
 			return null;
-		}
+		} // 获取class
 		Class<?> resolvedClass = ClassUtils.forName(className, classLoader);
 		this.beanClass = resolvedClass;
 		return resolvedClass;
@@ -1143,6 +1145,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * @throws BeanDefinitionValidationException in case of validation failure
 	 */
 	protected void prepareMethodOverride(MethodOverride mo) throws BeanDefinitionValidationException {
+		// 获取对应类中方法名的个数
 		int count = ClassUtils.getMethodCountForName(getBeanClass(), mo.getMethodName());
 		if (count == 0) {
 			throw new BeanDefinitionValidationException(
@@ -1151,6 +1154,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 		}
 		else if (count == 1) {
 			// Mark override as not overloaded, to avoid the overhead of arg type checking.
+			// 标记methodOverride暂未被覆盖，避免参数检查的开销
 			mo.setOverloaded(false);
 		}
 	}

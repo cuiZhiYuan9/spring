@@ -119,15 +119,22 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 */
 	@Override
 	protected final void refreshBeanFactory() throws BeansException {
-		if (hasBeanFactory()) {
-			destroyBeans();
+		if (hasBeanFactory()) {//是否有bean 判断当前ApplicationContext是否存在BeanFactory，如果存在的话就销毁所有 Bean，关闭 BeanFactory
+			destroyBeans(); //注意，一个应用可以存在多个BeanFactory，这里判断的是当前ApplicationContext是否存在BeanFactory
 			closeBeanFactory();
 		}
 		try {
+			//创建bean工厂创建容器 其实就是return new DefaultListableBeanFactory()
+			//这哥们背景相当强大，所有关于容器的接口、抽象类他都继承了
+			// 这里忽略了三个接口   BeanNameAware.class BeanFactoryAware BeanClassLoaderAware
 			DefaultListableBeanFactory beanFactory = createBeanFactory();
+			//设置标识 序列化用 可以反序列化beanFactory 这个id是再启动时 父类所创建的
 			beanFactory.setSerializationId(getId());
+			//定制beanFactory，设置相关属性，是否允许覆盖同名称的不同含义的对象的循环依赖  默认关闭
 			customizeBeanFactory(beanFactory);
-			loadBeanDefinitions(beanFactory);
+			// 解析xml和注解，对BeanDefinition进行封装。BeanDefinition：所有xml配置和注解最终都会被读取到这个对象中去。
+			//重点注意beanDefinitionMap  和 beanDefinitionNames
+			loadBeanDefinitions(beanFactory);//
 			this.beanFactory = beanFactory;
 		}
 		catch (IOException ex) {
@@ -194,7 +201,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 * @see org.springframework.beans.factory.support.DefaultListableBeanFactory#setAllowRawInjectionDespiteWrapping
 	 */
 	protected DefaultListableBeanFactory createBeanFactory() {
-		return new DefaultListableBeanFactory(getInternalParentBeanFactory());
+		return new DefaultListableBeanFactory(getInternalParentBeanFactory());//获取父类工厂
 	}
 
 	/**

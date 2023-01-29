@@ -306,18 +306,23 @@ public abstract class AopUtils {
 		if (candidateAdvisors.isEmpty()) {
 			return candidateAdvisors;
 		}
+		// 定义一个合适的增强器对象
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
+		// 循环候选的advisor
 		for (Advisor candidate : candidateAdvisors) {
+			// 判断我们的增强器是不是实现了 IntroductionAdvisor  对于一个现存的类， 它可以为其增加行为，而不用修改该类的程序
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
 			}
 		}
+		// 是否有引介增强
 		boolean hasIntroductions = !eligibleAdvisors.isEmpty();
 		for (Advisor candidate : candidateAdvisors) {
 			if (candidate instanceof IntroductionAdvisor) {
 				// already processed
 				continue;
 			}
+			// 真正得判断增前期是否何时当前类型
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}

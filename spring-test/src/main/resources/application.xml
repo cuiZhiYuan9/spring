@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+http://www.springframework.org/schema/beans/spring-beans-2.5.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+
+
+<!--
+	<bean id="f" class="org.springframework.Cao">
+		<property name="id" value="ids"/>
+	</bean>
+	<bean id="person" class="org.springframework.Person"/>
+
+	<bean class="org.springframework.postprocessor.MyBeanDefinitionRegistryPostProcessor"/>
+
+	<bean class="org.springframework.postprocessor.SupplierBEanFactoryPostProcessor" id="supplierBEanFactoryPostProcessor"/>
+
+	<bean class="org.springframework.test.MyBeanFactoryPostProcessor"/>
+
+
+	<context:component-scan base-package="org.springframework.scan"/>
+	<context:component-scan base-package="org.springframework.factorybean"/>
+
+	<bean id="apple" class="org.springframework.lookup.Apple"/>
+
+	<bean id="banana" class="org.springframework.lookup.Banana"/>
+
+	<bean id="fruit" class="org.springframework.lookup.FruitPlate">
+		<lookup-method name="eat" bean="apple"/>
+	</bean>
+	<bean id="fruit2" class="org.springframework.lookup.FruitPlate">
+		<lookup-method name="eat" bean="banana"/>
+	</bean>
+-->
+
+	<bean id="logUtil" class="org.springframework.aop.service.LogUtil" />
+	<bean id="myCalculator" class="org.springframework.aop.service.MyCalculator" />
+	<aop:config>
+		<aop:aspect ref="logUtil">
+			<aop:pointcut id="myPoint" expression="execution( * org.springframework.aop.service.MyCalculator.*(..))"/>
+			<aop:around method="around" pointcut-ref="myPoint"/>
+			<aop:before method="start" pointcut-ref="myPoint"/>
+			<aop:after method="logFinally" pointcut-ref="myPoint"/>
+			<aop:after-returning method="stop" pointcut-ref="myPoint" returning="result"/>
+			<aop:after-throwing method="logException" pointcut-ref="myPoint" throwing="e"/>
+		</aop:aspect>
+	</aop:config>
+	<aop:aspectj-autoproxy/>
+
+
+</beans>

@@ -166,21 +166,27 @@ abstract public class KeyFactory {
 
 	public static KeyFactory create(ClassLoader loader, Class keyInterface, KeyFactoryCustomizer customizer,
 			List<KeyFactoryCustomizer> next) {
+		// 创建一个简单的类生成器，即只会生成hashCode,equals,toString,newInstance方法
 		Generator gen = new Generator();
+		// 设置接口为 enhancerKey类型
 		gen.setInterface(keyInterface);
 		// SPRING PATCH BEGIN
 		gen.setContextClass(keyInterface);
 		// SPRING PATCH END
 
 		if (customizer != null) {
+			// 添加定制器
 			gen.addCustomizer(customizer);
 		}
 		if (next != null && !next.isEmpty()) {
 			for (KeyFactoryCustomizer keyFactoryCustomizer : next) {
+				// 添加定制器
 				gen.addCustomizer(keyFactoryCustomizer);
 			}
 		}
+		// 设置生成器的类加载器
 		gen.setClassLoader(loader);
+		// 生成enhancerKey的代理类
 		return gen.create();
 	}
 
@@ -233,6 +239,7 @@ abstract public class KeyFactory {
 		}
 
 		public KeyFactory create() {
+			// 设置该生成器代理类的名字前缀，即我们的接口名 Enhancer.enhancerKey
 			setNamePrefix(keyInterface.getName());
 			return (KeyFactory) super.create(keyInterface.getName());
 		}
@@ -254,24 +261,30 @@ abstract public class KeyFactory {
 		}
 
 		public void generateClass(ClassVisitor v) {
+			// 创建类写入聚合对象
 			ClassEmitter ce = new ClassEmitter(v);
-
+			// 找到被代理类的newInstance方法，没有会报错
 			Method newInstance = ReflectUtils.findNewInstance(keyInterface);
+			// 返回值不为Object报错
 			if (!newInstance.getReturnType().equals(Object.class)) {
 				throw new IllegalArgumentException("newInstance method must return Object");
 			}
 
 			Type[] parameterTypes = TypeUtils.getTypes(newInstance.getParameterTypes());
+			// 版本号 访问修饰符
 			ce.begin_class(Constants.V1_8,
 					Constants.ACC_PUBLIC,
 					getClassName(),
 					KEY_FACTORY,
 					new Type[]{Type.getType(keyInterface)},
 					Constants.SOURCE_FILE);
+			// 写无参
 			EmitUtils.null_constructor(ce);
+			// 写入newInstance
 			EmitUtils.factory_method(ce, ReflectUtils.getSignature(newInstance));
 
 			int seed = 0;
+			// 写有参
 			CodeEmitter e = ce.begin_method(Constants.ACC_PUBLIC,
 					TypeUtils.parseConstructor(parameterTypes),
 					null);

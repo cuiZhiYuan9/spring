@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
+ * 实现了BeanPostProcessor接口 aop得整体逻辑就是通过 postProcessBeforeInstantiation  和postProcessAfterInstantiation来实现得
  * {@link AspectJAwareAdvisorAutoProxyCreator} subclass that processes all AspectJ
  * annotation aspects in the current application context, as well as Spring Advisors.
  *

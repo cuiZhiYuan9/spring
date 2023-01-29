@@ -51,6 +51,7 @@ import org.springframework.stereotype.Component;
  */
 abstract class ConfigurationClassUtils {
 
+	// 当前bean是@Configuration 标注的 记为full
 	public static final String CONFIGURATION_CLASS_FULL = "full";
 
 	public static final String CONFIGURATION_CLASS_LITE = "lite";
@@ -84,13 +85,16 @@ abstract class ConfigurationClassUtils {
 	 */
 	public static boolean checkConfigurationClassCandidate(
 			BeanDefinition beanDef, MetadataReaderFactory metadataReaderFactory) {
-
+		// 获取class类名
 		String className = beanDef.getBeanClassName();
 		if (className == null || beanDef.getFactoryMethodName() != null) {
 			return false;
 		}
-
+		// 注解元数据
 		AnnotationMetadata metadata;
+		//通过注解注入的bean 都是AnnotatedGenericBeanDefinition   他实现了 AnnotatedBeanDefinition、
+		// spring内部的BeanDefinition 是RootBeanDefinition 实现了AbstractBeanDefinition
+		// 此处用于是否归属于AnnotatedBeanDefinition
 		if (beanDef instanceof AnnotatedBeanDefinition &&
 				className.equals(((AnnotatedBeanDefinition) beanDef).getMetadata().getClassName())) {
 			// Can reuse the pre-parsed metadata from the given BeanDefinition...
@@ -121,11 +125,13 @@ abstract class ConfigurationClassUtils {
 				return false;
 			}
 		}
-
+		// 获取bean定义元数据被@Configuration注解标注的属性字典值
 		Map<String, Object> config = metadata.getAnnotationAttributes(Configuration.class.getName());
+		// 如果bean被@Configuration注解标识且属性proxyBeanMethods为false（使用代理模式） bean定义记为full
 		if (config != null && !Boolean.FALSE.equals(config.get("proxyBeanMethods"))) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
+		// 是否有@BEan @Component ... bean设置为lite
 		else if (config != null || isConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}

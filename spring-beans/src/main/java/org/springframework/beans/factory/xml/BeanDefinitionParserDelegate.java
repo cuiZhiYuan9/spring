@@ -412,17 +412,17 @@ public class BeanDefinitionParserDelegate {
 	 */
 	@Nullable
 	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable BeanDefinition containingBean) {
-		String id = ele.getAttribute(ID_ATTRIBUTE);
-		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);
+		String id = ele.getAttribute(ID_ATTRIBUTE);//获取bean 定义的 id
+		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);// 获取name 并且一个bean可以用多个名称：name=“bean1,bean2,bean3”
 
 		List<String> aliases = new ArrayList<>();
-		if (StringUtils.hasLength(nameAttr)) {
+		if (StringUtils.hasLength(nameAttr)) {// 将 name 属性的定义按照 “逗号、分号、空格” 切分，形成一个 别名列表数组，
 			String[] nameArr = StringUtils.tokenizeToStringArray(nameAttr, MULTI_VALUE_ATTRIBUTE_DELIMITERS);
 			aliases.addAll(Arrays.asList(nameArr));
 		}
 
 		String beanName = id;
-		if (!StringUtils.hasText(beanName) && !aliases.isEmpty()) {
+		if (!StringUtils.hasText(beanName) && !aliases.isEmpty()) {// 如果没有指定id, 那么用别名列表的第一个名字作为beanName
 			beanName = aliases.remove(0);
 			if (logger.isTraceEnabled()) {
 				logger.trace("No XML 'id' specified - using '" + beanName +
@@ -430,13 +430,13 @@ public class BeanDefinitionParserDelegate {
 			}
 		}
 
-		if (containingBean == null) {
-			checkNameUniqueness(beanName, aliases, ele);
+		if (containingBean == null) {// 检查名称唯一性
+			checkNameUniqueness(beanName, aliases, ele);//验证指定的 bean 名称和别名尚未在当前级别的 beans 元素嵌套中使用
 		}
-
-		AbstractBeanDefinition beanDefinition = parseBeanDefinitionElement(ele, beanName, containingBean);
+		// 根据 <bean ...>...</bean> 中的配置创建 BeanDefinition，然后把配置中的信息都设置到实例中,
+		AbstractBeanDefinition beanDefinition = parseBeanDefinitionElement(ele, beanName, containingBean);// 这行执行完毕，一个 BeanDefinition 实例就出来了。等下接着往下看
 		if (beanDefinition != null) {
-			if (!StringUtils.hasText(beanName)) {
+			if (!StringUtils.hasText(beanName)) {  // 如果有自定义属性的话，进行相应的解析
 				try {
 					if (containingBean != null) {
 						beanName = BeanDefinitionReaderUtils.generateBeanName(
@@ -497,7 +497,7 @@ public class BeanDefinitionParserDelegate {
 	 * {@code null} if problems occurred during the parsing of the bean definition.
 	 */
 	@Nullable
-	public AbstractBeanDefinition parseBeanDefinitionElement(
+	public AbstractBeanDefinition parseBeanDefinitionElement(// 最重要的地方，如何根据配置创建 BeanDefinition 实例
 			Element ele, String beanName, @Nullable BeanDefinition containingBean) {
 
 		this.parseState.push(new BeanEntry(beanName));
@@ -511,19 +511,19 @@ public class BeanDefinitionParserDelegate {
 			parent = ele.getAttribute(PARENT_ATTRIBUTE);
 		}
 
-		try {
-			AbstractBeanDefinition bd = createBeanDefinition(className, parent);
-
+		try { // 创建 BeanDefinition，然后设置类信息
+			AbstractBeanDefinition bd = createBeanDefinition(className, parent);//就是判空和set方法
+			// 设置 BeanDefinition 的一堆属性，这些属性定义在 AbstractBeanDefinition 中 类似init，懒加载，销毁方法
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
 
-			parseMetaElements(ele, bd);
-			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
-			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
+			parseMetaElements(ele, bd);//解析  <meta/>
+			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());//解析 <lookup-method /> 不常用
+			parseReplacedMethodSubElements(ele, bd.getMethodOverrides()); // 解析 <replaced-method /> 替换方法
 
-			parseConstructorArgElements(ele, bd);
-			parsePropertyElements(ele, bd);
-			parseQualifierElements(ele, bd);
+			parseConstructorArgElements(ele, bd);// 解析 <constructor-arg /> 构造函数参数，用于初始化指定的内部属性
+			parsePropertyElements(ele, bd); // 解析 <property />   属性复制
+			parseQualifierElements(ele, bd); // 解析 <qualifier />  特定 Spring bean 的名称一起进行装配
 
 			bd.setResource(this.readerContext.getResource());
 			bd.setSource(extractSource(ele));
@@ -547,6 +547,7 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	/**
+	 * 将给定 bean 元素的属性应用于给定 bean * 定义。
 	 * Apply the attributes of the given bean element to the given bean * definition.
 	 * @param ele bean declaration element
 	 * @param beanName bean name
@@ -567,11 +568,11 @@ public class BeanDefinitionParserDelegate {
 			bd.setScope(containingBean.getScope());
 		}
 
-		if (ele.hasAttribute(ABSTRACT_ATTRIBUTE)) {
+		if (ele.hasAttribute(ABSTRACT_ATTRIBUTE)) {//抽象类
 			bd.setAbstract(TRUE_VALUE.equals(ele.getAttribute(ABSTRACT_ATTRIBUTE)));
 		}
 
-		String lazyInit = ele.getAttribute(LAZY_INIT_ATTRIBUTE);
+		String lazyInit = ele.getAttribute(LAZY_INIT_ATTRIBUTE);//懒加载
 		if (isDefaultValue(lazyInit)) {
 			lazyInit = this.defaults.getLazyInit();
 		}
@@ -1379,15 +1380,18 @@ public class BeanDefinitionParserDelegate {
 	 */
 	@Nullable
 	public BeanDefinition parseCustomElement(Element ele, @Nullable BeanDefinition containingBd) {
+		// 获取命名空间的url
 		String namespaceUri = getNamespaceURI(ele);
 		if (namespaceUri == null) {
 			return null;
 		}
+		// 根据命名空间找到对应的NameScarpHandler
 		NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().resolve(namespaceUri);
 		if (handler == null) {
 			error("Unable to locate Spring NamespaceHandler for XML schema namespace [" + namespaceUri + "]", ele);
 			return null;
 		}
+		// 调用自定义的NameScarpHandler进行解析
 		return handler.parse(ele, new ParserContext(this.readerContext, this, containingBd));
 	}
 

@@ -38,6 +38,7 @@ public class SimpleBeanFactoryAwareAspectInstanceFactory implements AspectInstan
 	@Nullable
 	private String aspectBeanName;
 
+	// 通过aware赋值
 	@Nullable
 	private BeanFactory beanFactory;
 
@@ -79,7 +80,7 @@ public class SimpleBeanFactoryAwareAspectInstanceFactory implements AspectInstan
 		}
 	}
 
-	@Override
+	@Override 
 	public int getOrder() {
 		if (this.beanFactory != null && this.aspectBeanName != null &&
 				this.beanFactory.isSingleton(this.aspectBeanName) &&
