@@ -12,7 +12,8 @@ public class Hello {
 	public static void main(String[] args) throws NoSuchMethodException, NoSuchFieldException, IllegalAccessException {
 		saveGeneratedCgGlibProxyFiles(System.getProperty("user.dir")+"/proxy");
 		ApplicationContext a = new ClassPathXmlApplicationContext("application.xml");
-		a.getBean(MyCalculator.class).add(1,1);
+		MyCalculator bean = a.getBean(MyCalculator.class);
+		bean.add(1,2);
 
 	}
 
