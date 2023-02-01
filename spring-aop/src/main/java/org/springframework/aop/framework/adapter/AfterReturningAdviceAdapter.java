@@ -21,6 +21,8 @@ import java.io.Serializable;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.AfterReturningAdvice;
 

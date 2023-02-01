@@ -691,7 +691,7 @@ class CglibAopProxy implements AopProxy, Serializable {
 			boolean setProxyContext = false;
 			Object target = null;
 			TargetSource targetSource = this.advised.getTargetSource();
-			try {
+			try { // 允许在代理方法中调用另一个代理方法  expose-Proxy
 				if (this.advised.exposeProxy) {
 					// Make invocation available if necessary.
 					oldProxy = AopContext.setCurrentProxy(proxy);
@@ -700,7 +700,15 @@ class CglibAopProxy implements AopProxy, Serializable {
 				// Get as late as possible to minimize the time we "own" the target, in case it comes from a pool...
 				target = targetSource.getTarget();
 				Class<?> targetClass = (target != null ? target.getClass() : null);
-				// 从advised 中获取配置好的Aop通知
+				// 从advised 中获取配置好的Aop通知 获取方法拦截器链
+				/*
+					* AspectJAfterAdvice AspectjAfterThrowingAdvice AspectAroundAdvice 实现了 MethodInterceptor
+					* 剩下了before（MethodBeforeAdviceAdapter） ，afterReturning(AfterReturningAdviceAdapter) 没有实现 MethodInterceptor 通过适配器的方式返回对应的 MethodInterceptor
+					* 为什么要进行这样的分类呢？
+					* 原本所有的advice可以都实现methodInterceptor 但是为了扩展性还需要提供适配器模式 ，那么在进行MethodInterceptor组装的时候要多增加判断逻辑 不能添加2次 所以可以通过实现适配器的方式来实现
+					* MethodBeforeAdviceAdapter 		AfterReturningAdviceAdapter    ThrowsAdviceAdapter
+					* 一切都为了扩展
+				 */
 				List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
 				Object retVal;
 				// Check whether we only have one InvokerInterceptor: that is,

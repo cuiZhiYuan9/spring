@@ -39,11 +39,11 @@ import org.springframework.aop.support.DefaultPointcutAdvisor;
  */
 @SuppressWarnings("serial")
 public class DefaultAdvisorAdapterRegistry implements AdvisorAdapterRegistry, Serializable {
-
+	// 持有一个AdvisorAdapter的list，这个list中的adapter是与实现SpringAop的advice增强功能相对应的
 	private final List<AdvisorAdapter> adapters = new ArrayList<>(3);
 
 
-	/**
+	/** 把已有的advice实现的adapter加入进来
 	 * Create a new DefaultAdvisorAdapterRegistry, registering well-known adapters.
 	 */
 	public DefaultAdvisorAdapterRegistry() {

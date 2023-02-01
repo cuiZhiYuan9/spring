@@ -3,12 +3,14 @@ package org.springframework.aop.service;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Pointcut;
 
 import java.util.Arrays;
 
 
 public class LogUtil {
-	//    @Pointcut("execution(public Integer com.mashibing.service.MyCalculator.*(Integer,Integer))")
+	   @Pointcut("execution(public Integer com.mashibing.service.MyCalculator.*(Integer,Integer))")
 	public void myPointCut(){}
 
 	//    @Pointcut("execution(* *(..))")
@@ -24,7 +26,7 @@ public class LogUtil {
 		return 100;
 	}
 
-	//    @AfterReturning(value = "myPointCut()",returning = "result")
+	@AfterReturning(value = "myPointCut()",returning = "result")
 	public static void stop(JoinPoint joinPoint,Object result){
 		Signature signature = joinPoint.getSignature();
 		System.out.println("log---"+signature.getName()+"方法执行结束，结果是："+result);

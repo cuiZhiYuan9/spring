@@ -55,7 +55,7 @@ public class DefaultAdvisorChainFactory implements AdvisorChainFactory, Serializ
 		// but we need to preserve order in the ultimate list.
 		// 单例获取 DefaultAdvisorAdapterRegistry实例
 		// 在spring中把每一个功能都分的很细，每个功能都会有相应的类去处理，符合单一职责原则 赞！！！
-		// AdvisorAdapterRegistry 是将advice适配adviser 将 adviser适配为对应的MethodInterceptor
+		// AdvisorAdapterRegistry 是将advice适配adviser 将 adviser适配为对应的MethodInterceptor     以Registry结尾的  对对象进行增删改查的类
 		AdvisorAdapterRegistry registry = GlobalAdvisorAdapterRegistry.getInstance();
 		Advisor[] advisors = config.getAdvisors();
 		// 创建一个初始大小为之前获取到通知个数的集合
