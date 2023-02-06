@@ -350,6 +350,11 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			alreadyParsed.addAll(configClasses);
 
 			candidates.clear();
+			// 这里判断registry.getBEanDefinitionCount() >candidateNames.length 目的是知道reader.loadBeanDefinitions(configClasses这一部有没有问题)
+			// 实际上就是看配置类（例如AppConfig会像beanDefinitionMap中加bean）
+			// 如果有 就会大于
+			// 这样就需要遍历新的BeanDefinition，并判断bean是否已经被解析过了， 如果没有解析，就需要进行解析
+			// 这里AppConfig类想容器中添加的bean，实际上在parse.parse（）就已经完全解析
 			if (registry.getBeanDefinitionCount() > candidateNames.length) {
 				String[] newCandidateNames = registry.getBeanDefinitionNames();
 				Set<String> oldCandidateNames = new HashSet<>(Arrays.asList(candidateNames));

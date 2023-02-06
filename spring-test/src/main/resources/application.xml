@@ -36,7 +36,7 @@ http://www.springframework.org/schema/beans/spring-beans-2.5.xsd http://www.spri
 
 	<bean id="logUtil" class="org.springframework.aop.service.LogUtil" />
 	<bean id="myCalculator" class="org.springframework.aop.service.MyCalculator" />
-	<aop:config>
+<!--	<aop:config>
 		<aop:aspect ref="logUtil">
 			<aop:pointcut id="myPoint" expression="execution( * org.springframework.aop.service.MyCalculator.*(..))"/>
 			<aop:around method="around" pointcut-ref="myPoint"/>
@@ -46,7 +46,6 @@ http://www.springframework.org/schema/beans/spring-beans-2.5.xsd http://www.spri
 			<aop:after-throwing method="logException" pointcut-ref="myPoint" throwing="e"/>
 		</aop:aspect>
 	</aop:config>
-	<aop:aspectj-autoproxy/>
-
+	<aop:aspectj-autoproxy/>-->
 
 </beans>

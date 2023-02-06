@@ -171,6 +171,11 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 			// Evaluate dynamic method matcher here: static part will already have
 			// been evaluated and found to match.
 			// 这里对拦截器进行动态匹配判断，这里是对pointcut触发进行匹配的方法，如果和定义的pointcut匹配，那么就会执行Advice
+			/*
+				* 这里为什么 afterThrowing after afterReturning 直接返回责任链
+				* 因为这三个都在我们业务方法执行后才调用，所以直接返回我们的责任链
+				* 而 before和around则需要考虑我们的业务方法
+			 */
 			InterceptorAndDynamicMethodMatcher dm =
 					(InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;
 			Class<?> targetClass = (this.targetClass != null ? this.targetClass : this.method.getDeclaringClass());

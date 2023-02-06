@@ -47,6 +47,7 @@ public class AspectJAfterAdvice extends AbstractAspectJAdvice
 			return mi.proceed();
 		}
 		finally {
+			// 后置通知方法总会执行，原因就在这里 finally
 			invokeAdviceMethod(getJoinPointMatch(), null, null);
 		}
 	}
