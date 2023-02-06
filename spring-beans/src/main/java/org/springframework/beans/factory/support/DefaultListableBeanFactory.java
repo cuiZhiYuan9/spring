@@ -521,15 +521,26 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			// Only consider bean as eligible if the bean name is not defined as alias for some other bean.
 			if (!isAlias(beanName)) {
 				try {
+					// 获取合并的BeanDefinition,合并的BeanDefinition指的是整合了父BeanDefinition的属性，然后属性值会转换为RootBeanDefinition
 					RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 					// Only check bean definition if it is complete.
+					// 抽象的不考虑，就是拿来继承的
+					// 如果允许早期实例化 那么直接短路进入方法体
+					// 如果不允许早期实例化 那么需要进一步判断
+					// 当不允许早期实例化并且beanClass已经被加载或者它可以早期初始化，那么如果当前bean是工厂bean并且指定的bean又是工厂
+					// 那么就必须早期初始化，也就是说不符合我们指定的allowEagerInit为false的情况，直接跳过
 					if (!mbd.isAbstract() && (allowEagerInit ||
 							(mbd.hasBeanClass() || !mbd.isLazyInit() || isAllowEagerClassLoading()) &&
 									!requiresEagerInitForType(mbd.getFactoryBeanName()))) {
+						// 是否是是factoryBean
 						boolean isFactoryBean = isFactoryBean(beanName, mbd);
+						// 根据rootBeanDefinition来获取BeanDefinitionHolder 对象
 						BeanDefinitionHolder dbd = mbd.getDecoratedDefinition();
+						// 定义匹配的标志位
 						boolean matchFound = false;
+						// 定义是否允许factoryBean的初始化标志位
 						boolean allowFactoryBeanInit = (allowEagerInit || containsSingleton(beanName));
+						// 是否是懒加载
 						boolean isNonLazyDecorated = (dbd != null && !mbd.isLazyInit());
 						if (!isFactoryBean) {
 							if (includeNonSingletons || isSingleton(beanName, mbd, dbd)) {
