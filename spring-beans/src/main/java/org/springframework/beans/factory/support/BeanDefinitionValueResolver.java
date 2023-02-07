@@ -114,8 +114,11 @@ class BeanDefinitionValueResolver {
 			// 解析出对应的ref若封装的bean元信息的bean对象
 			return resolveReference(argName, ref);
 		}
+		// 是RuntimeBeanNameReference
+		// idref注入的是目标bean的id而不是目标bean的实例，同时使用通过idref容器在部署的时候还会验证这个名称的bean
+		// 是否真的存在，idref和value一样，只是将某个字符串注入到属性或者构造函数中，只不过注入的是某个bean定义的id属性值
 		else if (value instanceof RuntimeBeanNameReference) {
-			// 强转
+
 			String refName = ((RuntimeBeanNameReference) value).getBeanName();
 			refName = String.valueOf(doEvaluate(refName));
 			if (!this.beanFactory.containsBean(refName)) {
@@ -304,16 +307,22 @@ class BeanDefinitionValueResolver {
 	@Nullable
 	private Object resolveReference(Object argName, RuntimeBeanReference ref) {
 		try {
+			// 定义一个存储bean对象的变量
 			Object bean;
+			// 另一个bean引用的bean类型
 			Class<?> beanType = ref.getBeanType();
+			// 来自父工厂？
 			if (ref.isToParent()) {
+				// 获取夫工厂
 				BeanFactory parent = this.beanFactory.getParentBeanFactory();
 				if (parent == null) {
+					// 父工厂没有，本工厂没有，意味着没有定义bean描述信息
 					throw new BeanCreationException(
 							this.beanDefinition.getResourceDescription(), this.beanName,
 							"Cannot resolve reference to bean " + ref +
 									" in parent factory: no parent factory available");
 				}
+				// 引用的bean不为null 去父工厂拿
 				if (beanType != null) {
 					bean = parent.getBean(beanType);
 				}
@@ -322,18 +331,25 @@ class BeanDefinitionValueResolver {
 				}
 			}
 			else {
+
 				String resolvedName;
+
 				if (beanType != null) {
 					NamedBeanHolder<?> namedBean = this.beanFactory.resolveNamedBean(beanType);
 					bean = namedBean.getBeanInstance();
+					// 让resolvedName引用nameBean所封装的Bean名
 					resolvedName = namedBean.getBeanName();
 				}
 				else {
+					// 让resolvedName引用ref所包装的bean名称
 					resolvedName = String.valueOf(doEvaluate(ref.getBeanName()));
+					// 获取resolvedName的bean对象
 					bean = this.beanFactory.getBean(resolvedName);
 				}
+				// 注册beanName与dependentBeanNamed的依赖关系到bean工厂
 				this.beanFactory.registerDependentBean(resolvedName, this.beanName);
 			}
+			// 是nullBean  spring 认为设置为空也是业务所需
 			if (bean instanceof NullBean) {
 				bean = null;
 			}

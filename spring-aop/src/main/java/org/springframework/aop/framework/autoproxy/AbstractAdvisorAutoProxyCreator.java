@@ -76,6 +76,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 			Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
 		// 找到合适的advisor
 		List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
+		// 没找到
 		if (advisors.isEmpty()) {
 			return DO_NOT_PROXY;
 		}
@@ -100,7 +101,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 		// 提供hock方法，用于对目标advisor进行扩展
 		extendAdvisors(eligibleAdvisors);
 		if (!eligibleAdvisors.isEmpty()) {
-			// 排序
+			// 排序 拓扑
 			eligibleAdvisors = sortAdvisors(eligibleAdvisors);
 		}
 		return eligibleAdvisors;

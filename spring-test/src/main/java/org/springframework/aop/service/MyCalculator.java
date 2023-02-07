@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class MyCalculator {
+
+	private LogUtil logUtil;
 	public Integer add(Integer i, Integer j) {
 		return i + j;
 	}
@@ -25,5 +27,8 @@ public class MyCalculator {
 		return i;
 	}
 
+	public void setLogUtil(LogUtil logUtil) {
+		this.logUtil = logUtil;
+	}
 }
 
