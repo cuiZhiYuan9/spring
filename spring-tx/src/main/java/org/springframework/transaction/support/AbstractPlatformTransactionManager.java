@@ -414,18 +414,20 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	private TransactionStatus handleExistingTransaction(
 			TransactionDefinition definition, Object transaction, boolean debugEnabled)
 			throws TransactionException {
-
+		// 当前是无是否为没有事务
 		if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NEVER) {
 			throw new IllegalTransactionStateException(
 					"Existing transaction found for transaction marked with propagation 'never'");
 		}
-
+		// 当前事务属性不支持事务 挂起当前事务
 		if (definition.getPropagationBehavior() == TransactionDefinition.PROPAGATION_NOT_SUPPORTED) {
 			if (debugEnabled) {
 				logger.debug("Suspending current transaction");
 			}
+			// 挂起当前事务
 			Object suspendedResources = suspend(transaction);
 			boolean newSynchronization = (getTransactionSynchronization() == SYNCHRONIZATION_ALWAYS);
+			// 创建一个
 			return prepareTransactionStatus(
 					definition, null, false, newSynchronization, debugEnabled, suspendedResources);
 		}
@@ -572,21 +574,32 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 */
 	@Nullable
 	protected final SuspendedResourcesHolder suspend(@Nullable Object transaction) throws TransactionException {
+		// 判断当前的线程变量中有没有激活的事物,有需要清空线程变量
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
 			List<TransactionSynchronization> suspendedSynchronizations = doSuspendSynchronization();
 			try {
 				Object suspendedResources = null;
 				if (transaction != null) {
+					//挂起的资源，连接持有器
 					suspendedResources = doSuspend(transaction);
 				}
+				// 获取当前事务名称
 				String name = TransactionSynchronizationManager.getCurrentTransactionName();
+				// 清空线程变量
 				TransactionSynchronizationManager.setCurrentTransactionName(null);
+				// 获取出只读事务的名称
 				boolean readOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly();
+				// 清空线程变量
 				TransactionSynchronizationManager.setCurrentTransactionReadOnly(false);
+				// 获取已存在事务的隔离级别
 				Integer isolationLevel = TransactionSynchronizationManager.getCurrentTransactionIsolationLevel();
+				// 清空隔离级别
 				TransactionSynchronizationManager.setCurrentTransactionIsolationLevel(null);
+				// 判断当前事务激活状态
 				boolean wasActive = TransactionSynchronizationManager.isActualTransactionActive();
+				// 清空标记
 				TransactionSynchronizationManager.setActualTransactionActive(false);
+				// 把上诉从线程变量中获取出来的存在事务属性封装为挂起的事务属性返回出去
 				return new SuspendedResourcesHolder(
 						suspendedResources, suspendedSynchronizations, name, readOnly, isolationLevel, wasActive);
 			}
