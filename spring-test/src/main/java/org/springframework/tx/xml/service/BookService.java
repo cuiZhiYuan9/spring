@@ -1,11 +1,11 @@
 package org.springframework.tx.xml.service;
 
 
-import org.springframework.tx.annotation.dao.BookDao;
+import org.springframework.tx.xml.dao.BookDao;
 
 public class BookService {
 
-    private BookDao bookDao;
+    BookDao bookDao;
 
     public BookDao getBookDao() {
         return bookDao;

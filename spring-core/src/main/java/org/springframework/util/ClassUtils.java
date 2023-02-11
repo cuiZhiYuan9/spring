@@ -1050,6 +1050,7 @@ public abstract class ClassUtils {
 	 */
 	public static String getQualifiedMethodName(Method method, @Nullable Class<?> clazz) {
 		Assert.notNull(method, "Method must not be null");
+		// 返回给定方法的限定名，由完全限定的接口/类名 + “.” + 方法名组成
 		return (clazz != null ? clazz : method.getDeclaringClass()).getName() + '.' + method.getName();
 	}
 

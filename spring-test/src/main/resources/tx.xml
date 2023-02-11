@@ -15,14 +15,14 @@
 	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
 		<property name="dataSource" ref="dataSource"/>
 	</bean>
-	<bean id="bookService" class="org.springframework.transactionalaop.BookService">
-		<property name="bookDao" ref="bookDao"/>
+	<bean id="bookSer" class="org.springframework.tx.xml.service.BookService">
+		<property name="bookDao" ref="book"/>
 	</bean>
-	<bean id="bookDao" class="org.springframework.transactionalaop.dao.BookDao">
+	<bean id="book" class="org.springframework.tx.xml.dao.BookDao">
 		<property name="jdbcTemplate" ref="jdbcTemplate"/>
 	</bean>
 	<aop:config>
-		<aop:pointcut id="txPoint" expression="execution(* org.springframework.transactionalaop.*.*.*(..))"/>
+		<aop:pointcut id="txPoint" expression="execution(* org.springframework.tx.xml.*.*.*(..))"/>
 		<aop:advisor advice-ref="myAdvice" pointcut-ref="txPoint"/>
 	</aop:config>
 	<tx:advice id="myAdvice" transaction-manager="transactionManager">
@@ -33,14 +33,14 @@
 	</tx:advice>
 <!--	<bean class="com.mashibing.MyBeanFactoryPostProcessorBySelf"/>-->
 
-	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+<!--	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
-		<!--绑定 MyBatis 配置文件！-->
+		&lt;!&ndash;绑定 MyBatis 配置文件！&ndash;&gt;
 		<property name="configLocation" value="classpath:mybatis-config.xml"/>
 	</bean>
 	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
-		<!--只能用构造器注入，因为它没有 set 方法！-->
-		<!-- 把工厂给它，就能从中 get 到 SqlSession 了-->
+		&lt;!&ndash;只能用构造器注入，因为它没有 set 方法！&ndash;&gt;
+		&lt;!&ndash; 把工厂给它，就能从中 get 到 SqlSession 了&ndash;&gt;
 		<constructor-arg  ref="sqlSessionFactory"/>
-	</bean>
+	</bean>-->
 </beans>

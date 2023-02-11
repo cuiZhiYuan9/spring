@@ -687,6 +687,7 @@ class CglibAopProxy implements AopProxy, Serializable {
 		@Override
 		@Nullable
 		public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+			// 先获取 拦截器链
 			Object oldProxy = null;
 			boolean setProxyContext = false;
 			Object target = null;

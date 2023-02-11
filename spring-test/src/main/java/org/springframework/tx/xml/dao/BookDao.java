@@ -20,7 +20,7 @@ public class BookDao {
      * @param price
      */
     public void updateBalance(String userName,int price){
-        String sql = "update account set balance=balance-? where username=?";
+        String sql = "update  test set id = 1 where id=?";
         jdbcTemplate.update(sql,price,userName);
     }
 
