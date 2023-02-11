@@ -153,6 +153,7 @@ final class PostProcessorRegistrationDelegate {
 			// Now, invoke the postProcessBeanFactory callback of all processors handled so far.
 
 			// 最后调用通过多有的BeanDefinitionRegistryPostProcessor的postProcessBeanFactory方法
+			// 在ConfigurationClassPostProcessor 的postProcessBeanFactory方法 对@Configuration进行了代理
 			invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
 			// 调用入参beanFactoryPostProcessors中的普通BeanFactoryPostProcessor的postProcessBeanFactory方法
 			invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);

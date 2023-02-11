@@ -81,10 +81,13 @@ public class AnnotatedBeanDefinitionReader {
 	 * @since 3.1
 	 */
 	public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry, Environment environment) {
+		// 这个注册器就是AnnotationConfigApplicationContext
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+		// 环境变量 指的是你的JAVA_HOME等
 		Assert.notNull(environment, "Environment must not be null");
 		this.registry = registry;
 		this.conditionEvaluator = new ConditionEvaluator(registry, environment, null);
+		// 注册bean工厂等
 		AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 	}
 
