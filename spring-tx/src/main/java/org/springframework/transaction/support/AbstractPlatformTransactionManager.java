@@ -718,15 +718,16 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			processRollback(defStatus, false);
 			return;
 		}
-
+		// 设置了全局回滚
 		if (!shouldCommitOnGlobalRollbackOnly() && defStatus.isGlobalRollbackOnly()) {
 			if (defStatus.isDebug()) {
 				logger.debug("Global transaction is marked as rollback-only but transactional code requested commit");
 			}
+			// 可预期的回滚
 			processRollback(defStatus, true);
 			return;
 		}
-
+		// 处理事务提交
 		processCommit(defStatus);
 	}
 
