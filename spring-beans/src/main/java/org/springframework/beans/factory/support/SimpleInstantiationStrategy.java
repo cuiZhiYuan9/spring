@@ -16,13 +16,6 @@
 
 package org.springframework.beans.factory.support;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
-
 import org.springframework.beans.BeanInstantiationException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.BeanFactory;
@@ -30,6 +23,13 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * Simple object instantiation strategy for use in a BeanFactory.
@@ -67,7 +67,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 			Constructor<?> constructorToUse;
 			// 锁定对象，是获得实例化构造方法线程安全
 			synchronized (bd.constructorArgumentLock) {
-				// 查看db对象里是否有构造方法，起一个混村的作用
+				// 查看db对象里是否有构造方法，起一个缓存的作用
 				constructorToUse = (Constructor<?>) bd.resolvedConstructorOrFactoryMethod;
 				// 没有
 				if (constructorToUse == null) {
@@ -93,10 +93,12 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 					}
 				}
 			}
+			// 反射
 			return BeanUtils.instantiateClass(constructorToUse);
 		}
 		else {
 			// Must generate CGLIB subclass.
+			// 如果有methodOverride对象，则调用方法来进行实现
 			return instantiateWithMethodInjection(bd, beanName, owner);
 		}
 	}
@@ -147,6 +149,7 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 			@Nullable Object factoryBean, final Method factoryMethod, Object... args) {
 
 		try {
+			// 安全管理器
 			if (System.getSecurityManager() != null) {
 				AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
 					ReflectionUtils.makeAccessible(factoryMethod);
@@ -156,12 +159,15 @@ public class SimpleInstantiationStrategy implements InstantiationStrategy {
 			else {
 				ReflectionUtils.makeAccessible(factoryMethod);
 			}
-
+			// 获取原有的Method对象
 			Method priorInvokedFactoryMethod = currentlyInvokedFactoryMethod.get();
 			try {
+				// 设置当前的Method
 				currentlyInvokedFactoryMethod.set(factoryMethod);
+				// 使用factoryMethod实例化对象
 				Object result = factoryMethod.invoke(factoryBean, args);
 				if (result == null) {
+					// 认为空也是一种业务需要的数据，故此特殊处理
 					result = new NullBean();
 				}
 				return result;

@@ -83,6 +83,9 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.mybatis/mybatis-spring
 	implementation group: 'org.mybatis', name: 'mybatis-spring', version: '2.0.6'
 	implementation group: 'org.mybatis', name: 'mybatis', version: '3.5.11'
+	// https://mvnrepository.com/artifact/org.projectlombok/lombok
+	compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.24'
+
 }
 
 task junit(type: Test) {

@@ -1,5 +1,9 @@
 package org.springframework;
 
+
+//@Data
+//@EqualsAndHashCode
+//@Accessors(chain = true)
 public class Person {
 	private String id;
 

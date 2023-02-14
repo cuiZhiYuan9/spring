@@ -16,38 +16,9 @@
 
 package org.springframework.beans.factory.support;
 
-import java.beans.ConstructorProperties;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
-
-import org.springframework.beans.BeanMetadataElement;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.TypeConverter;
-import org.springframework.beans.TypeMismatchException;
-import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.beans.factory.BeanDefinitionStoreException;
-import org.springframework.beans.factory.InjectionPoint;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
-import org.springframework.beans.factory.UnsatisfiedDependencyException;
+import org.springframework.beans.*;
+import org.springframework.beans.factory.*;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
@@ -57,12 +28,13 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.NamedThreadLocal;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.MethodInvoker;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
+
+import java.beans.ConstructorProperties;
+import java.lang.reflect.*;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.*;
 
 /**
  * Delegate for resolving constructors and factory methods.
@@ -418,12 +390,16 @@ class ConstructorResolver {
 		// bean包装类，可以对beanDefinition进行增删改查
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
-
+		// 获取工厂Bean对象，工厂Bean对象的类对象，确定工厂方法是否是静态
+		// 定义一个用于存放工厂Bean对象的Object
 		Object factoryBean;
+		// 工厂bean对象
 		Class<?> factoryClass;
+		// 静态标记
 		boolean isStatic;
 		// 返回当前@bean所在的类名
 		String factoryBeanName = mbd.getFactoryBeanName();
+		// 不为空 且名字不一样
 		if (factoryBeanName != null) {
 			if (factoryBeanName.equals(beanName)) {
 				throw new BeanDefinitionStoreException(mbd.getResourceDescription(), beanName,
@@ -432,14 +408,18 @@ class ConstructorResolver {
 			// 先处理@Bean所在的类的创建
 			factoryBean = this.beanFactory.getBean(factoryBeanName);
 			if (mbd.isSingleton() && this.beanFactory.containsSingleton(beanName)) {
+				// 是单例模式，且已经又过了，违反了单例原则，可以在不同的工厂bean进行声明
 				throw new ImplicitlyAppearedSingletonException();
 			}
 			this.beanFactory.registerDependentBean(factoryBeanName, beanName);
+			// 获取factoryBean的Class对象
 			factoryClass = factoryBean.getClass();
+			// 不是静态的
 			isStatic = false;
 		}
 		else {
 			// It's a static factory method on the bean class.
+			// 是否是一个class
 			if (!mbd.hasBeanClass()) {
 				throw new BeanDefinitionStoreException(mbd.getResourceDescription(), beanName,
 						"bean definition declares neither a bean class nor a factory-bean reference");
@@ -449,17 +429,26 @@ class ConstructorResolver {
 			isStatic = true;
 		}
 
+		// 尝试从mbd的缓存属性中获取要使用的工厂方法，要使用的参数值数组
+		// 声明一个要使用的工厂方法，默认为null
 		Method factoryMethodToUse = null;
+		// 声明一个用于存储不同形式的参数值的ArgumentsHolder，默认为null
 		ArgumentsHolder argsHolderToUse = null;
+		// 声明一个要使用的参数值数组,默认为null
 		Object[] argsToUse = null;
-
+		// 不为空，猜测是参数
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
 		else {
+			// 如果没有传
+			// 声明一个要解析的参数值数组，默认为null
 			Object[] argsToResolve = null;
+			// 使用mbd的构造函数字段通用锁进行加锁，以保证线程安全
 			synchronized (mbd.constructorArgumentLock) {
+				// 指定factoryMethodToUser引用mbd已解析的构造函数或工厂方法对象
 				factoryMethodToUse = (Method) mbd.resolvedConstructorOrFactoryMethod;
+				// 如果factoryMethodToUser不为null且mbd已解析构造函数参数
 				if (factoryMethodToUse != null && mbd.constructorArgumentsResolved) {
 					// Found a cached factory method...
 					argsToUse = mbd.resolvedConstructorArguments;
@@ -473,17 +462,23 @@ class ConstructorResolver {
 			}
 		}
 
+		// 如果没解析过，就获取factoryClass的用户定义类型，因为此时factoryClass可能是CGLIB动态代理类型，
+		// 所以要获取用父类的类型。如果工厂方法是唯一的，就是没重载的，就获取解析的工厂方法，如果不为空，就添加到一个不可变列表里，
+		// 如果为空的话，就要去找出factoryClass的以及父类的所有的方法，进一步找出方法修饰符一致且名字跟工厂方法名字相同的且是bean注解的方法，并放入列表里。
 		if (factoryMethodToUse == null || argsToUse == null) {
 			// Need to determine the factory method...
 			// Try all methods with this name to see if they match the given arguments.
+			// 需要确定出厂方法...尝试使用此名称的所有方法，以查看它们是否与给定的参数匹配。
 			factoryClass = ClassUtils.getUserClass(factoryClass);
-
+			// 定义一个用于存储候选方法的集合
 			List<Method> candidates = null;
 			if (mbd.isFactoryMethodUnique) {
 				if (factoryMethodToUse == null) {
+					// 获取到我们被@Bean的方法
 					factoryMethodToUse = mbd.getResolvedFactoryMethod();
 				}
 				if (factoryMethodToUse != null) {
+					// 丢到最后要处理的list中
 					candidates = Collections.singletonList(factoryMethodToUse);
 				}
 			}
@@ -496,16 +491,24 @@ class ConstructorResolver {
 					}
 				}
 			}
-
+			// 仅有一个，参数为空，没有构造函数 就直接使用该候选方法生成与beanName对应的Bean对象封装到bw中返回出去
 			if (candidates.size() == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
 				Method uniqueCandidate = candidates.get(0);
+				// 参数个数为0
 				if (uniqueCandidate.getParameterCount() == 0) {
+					/* 让mbd缓存uniqueCandidate【{@link RootBeanDefinition#factoryMethodToIntrospect}】
+					*/
 					mbd.factoryMethodToIntrospect = uniqueCandidate;
+					// 使用mdb的构造函数字段的通用锁
 					synchronized (mbd.constructorArgumentLock) {
+						// 让mbd缓存已解析的构造函数或工厂方法【{@link RootBeanDefinition#resolvedConstructorOrFactoryMethod}】
 						mbd.resolvedConstructorOrFactoryMethod = uniqueCandidate;
+						// 让mbd标记构造函数参数已解析【{@link RootBeanDefinition#constructorArgumentsResolved}】
 						mbd.constructorArgumentsResolved = true;
+						// 让mbd缓存完全解析的构造函数参数【{@link RootBeanDefinition#resolvedConstructorArguments}】
 						mbd.resolvedConstructorArguments = EMPTY_ARGS;
 					}
+					// 使用factoryBean生成的与beanName对应的Bean对象,并将该Bean对象保存到bw中
 					bw.setBeanInstance(instantiate(beanName, mbd, factoryBean, uniqueCandidate, EMPTY_ARGS));
 					return bw;
 				}
@@ -515,76 +518,126 @@ class ConstructorResolver {
 				candidates.sort(AutowireUtils.EXECUTABLE_COMPARATOR);
 			}
 
+			// ConstructorArgumentValues：构造函数参数值的Holder,通常作为BeanDefinition的一部分,支持构造函数参数列表中特定索引的值
+			// 以及按类型的通用参数匹配
+			// 定义一个用于存放解析后的构造函数参数值的ConstructorArgumentValues对象
 			ConstructorArgumentValues resolvedValues = null;
+			// 定义一个mbd是否支持使用构造函数进行自动注入的标记
 			boolean autowiring = (mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
+			// 定义一个最小类型差异权重，默认是Integer最大值
 			int minTypeDiffWeight = Integer.MAX_VALUE;
+			// 定义一个存储摸棱两可的工厂方法的Set集合,以用于抛出BeanCreationException时描述异常信息
 			Set<Method> ambiguousFactoryMethods = null;
 
+			// 定义一个最少参数数，默认为0
 			int minNrOfArgs;
+			// 如果explicitArgs不为null
 			if (explicitArgs != null) {
+				// minNrOfArgs引用explicitArgs的数组长度
 				minNrOfArgs = explicitArgs.length;
 			}
 			else {
 				// We don't have arguments passed in programmatically, so we need to resolve the
 				// arguments specified in the constructor arguments held in the bean definition.
+				// 我们没有以编程方式传递参数，因此我们需要解析BeanDefinition中保存的构造函数参数中指定的参数
+				// 如果mbd有构造函数参数值
 				if (mbd.hasConstructorArgumentValues()) {
+					// 获取mbd的构造函数参数值Holder
 					ConstructorArgumentValues cargs = mbd.getConstructorArgumentValues();
+					// 对resolvedValues实例化
 					resolvedValues = new ConstructorArgumentValues();
+					// 将cargs解析后值保存到resolveValues中，并让minNrOfArgs引用解析后的最小(索引参数值数+泛型参数值数)
 					minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 				}
 				else {
+					// 意味着mbd没有构造函数参数值时，将minNrOfArgs设为0
 					minNrOfArgs = 0;
 				}
 			}
 
+			// 定义一个用于UnsatisfiedDependencyException的列表
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
+			// 遍历candidates，元素名为candidate
 			for (Method candidate : candidates) {
+				// 获取参数的个数
 				int parameterCount = candidate.getParameterCount();
 
+				// 如果paramTypes的数组长度大于等于minNrOfArgs
 				if (parameterCount >= minNrOfArgs) {
+					// ArgumentsHolder:用于保存参数数组
+					// 定义一个封装参数数组的ArgumentsHolder对象
 					ArgumentsHolder argsHolder;
-
+					// 获取candidate的参数类型数组
 					Class<?>[] paramTypes = candidate.getParameterTypes();
+					// 如果explicitArgs不为null
 					if (explicitArgs != null) {
 						// Explicit arguments given -> arguments length must match exactly.
+						// 给定的显示参数->参数长度必须完全匹配
+						// 如果paramTypes的长度与explicitArgsd额长度不相等
 						if (paramTypes.length != explicitArgs.length) {
+							// 跳过当次循环中剩下的步骤，执行下一次循环。
 							continue;
 						}
+						// 实例化argsHolder，封装explicitArgs到argsHolder
 						argsHolder = new ArgumentsHolder(explicitArgs);
 					}
 					else {
 						// Resolved constructor arguments: type conversion and/or autowiring necessary.
+						// 已解析的构造函数参数:类型转换 and/or 自动注入时必须的
 						try {
+							// 定义用于保存参数名的数组
 							String[] paramNames = null;
+							// 获取beanFactory的参数名发现器
 							ParameterNameDiscoverer pnd = this.beanFactory.getParameterNameDiscoverer();
+							// 如果pnd不为null
 							if (pnd != null) {
+								// 通过pnd解析candidate的参数名
 								paramNames = pnd.getParameterNames(candidate);
 							}
+							// 将resolvedValues转换成一个封装着参数数组ArgumentsHolder实例，当candidate只有一个时，支持可在抛
+							// 出没有此类BeanDefinition的异常返回null，而不抛出异常
 							argsHolder = createArgumentArray(beanName, mbd, resolvedValues, bw,
 									paramTypes, paramNames, candidate, autowiring, candidates.size() == 1);
 						}
+						// 捕捉UnsatisfiedDependencyException
 						catch (UnsatisfiedDependencyException ex) {
 							if (logger.isTraceEnabled()) {
 								logger.trace("Ignoring factory method [" + candidate + "] of bean '" + beanName + "': " + ex);
 							}
 							// Swallow and try next overloaded factory method.
+							// 吞下并尝试下一个重载的工厂方法
+							// 如果cause为null
 							if (causes == null) {
+								// 对cause进行实例化成LinkedList对象
 								causes = new LinkedList<>();
 							}
+							// 将ex添加到causes中
 							causes.add(ex);
+							// 跳过本次循环体中余下尚未执行的语句，立即进行下一次的循环
 							continue;
 						}
 					}
 
+					// mbd支持的构造函数解析模式,默认使用宽松模式:
+					// 1. 严格模式如果摸棱两可的构造函数在转换参数时都匹配，则抛出异常
+					// 2. 宽松模式将使用"最接近类型匹配"的构造函数
+					// 如果bd支持的构造函数解析模式时宽松模式,引用获取类型差异权重值，否则引用获取Assignabliity权重值
 					int typeDiffWeight = (mbd.isLenientConstructorResolution() ?
 							argsHolder.getTypeDifferenceWeight(paramTypes) : argsHolder.getAssignabilityWeight(paramTypes));
 					// Choose this factory method if it represents the closest match.
+					// 如果它表示最接近的匹配项，则选择此工厂方法
+					// 如果typeDiffWeight小于minTypeDiffWeight
 					if (typeDiffWeight < minTypeDiffWeight) {
+						// 让factoryMethodToUser引用candidate
 						factoryMethodToUse = candidate;
+						// 让argsHolderToUse引用argsHolder
 						argsHolderToUse = argsHolder;
+						// 让argToUse引用argsHolder的经过转换后参数值数组
 						argsToUse = argsHolder.arguments;
+						// 让minTypeDiffWeight引用typeDiffWeight
 						minTypeDiffWeight = typeDiffWeight;
+						// 将ambiguousFactoryMethods置为null
 						ambiguousFactoryMethods = null;
 					}
 					// Find out about ambiguity: In case of the same type difference weight
@@ -592,44 +645,74 @@ class ConstructorResolver {
 					// and eventually raise an ambiguity exception.
 					// However, only perform that check in non-lenient constructor resolution mode,
 					// and explicitly ignore overridden methods (with the same parameter signature).
+					// 找出歧义:如果具有相同数量参数的方法具有相同的类型差异权重，则收集此类候选想并最终引发歧义异常。
+					// 但是，仅在非宽松构造函数解析模式下执行该检查，并显示忽略的方法（具有相同的参数签名）
+					// 如果factoryMethodToUse不为null且typeDiffWeight与minTypeDiffWeight相等
+					// 且mbd指定了严格模式解析构造函数且paramTypes的数组长度与factoryMethodToUse的参数数组长度相等且
+					// paramTypes的数组元素与factoryMethodToUse的参数数组元素不相等
 					else if (factoryMethodToUse != null && typeDiffWeight == minTypeDiffWeight &&
 							!mbd.isLenientConstructorResolution() &&
 							paramTypes.length == factoryMethodToUse.getParameterCount() &&
 							!Arrays.equals(paramTypes, factoryMethodToUse.getParameterTypes())) {
+						// 如果ambiguousFactoryMethods为null
 						if (ambiguousFactoryMethods == null) {
+							// 初始化ambiguousFactoryMethods为LinkedHashSet实例
 							ambiguousFactoryMethods = new LinkedHashSet<>();
+							// 将factoryMethodToUse添加到ambiguousFactoryMethods中
 							ambiguousFactoryMethods.add(factoryMethodToUse);
 						}
+						// 将candidate添加到ambiguousFactoryMethods中
 						ambiguousFactoryMethods.add(candidate);
 					}
 				}
 			}
 
+			// 整合无法筛选出候选方法或者无法解析出要使用的参数值的情况，抛出BeanCreationException并加以描述
+			// 如果factoryMethodToUse为null或者argsToUse为null
 			if (factoryMethodToUse == null || argsToUse == null) {
+				// 如果causes不为null
 				if (causes != null) {
+					// 从cause中移除最新的UnsatisfiedDependencyException
 					UnsatisfiedDependencyException ex = causes.removeLast();
+					// 遍历causes,元素为cause
 					for (Exception cause : causes) {
+						// 将cause添加到该Bean工厂的抑制异常列表【{@link DefaultSingletonBeanRegistry#suppressedExceptions】中
 						this.beanFactory.onSuppressedException(cause);
 					}
+					// 重新抛出ex
 					throw ex;
 				}
+				// 定义一个用于存放参数类型的简单类名的ArrayList对象，长度为minNrOfArgs
 				List<String> argTypes = new ArrayList<>(minNrOfArgs);
+				// 如果explicitArgs不为null
 				if (explicitArgs != null) {
+					// 遍历explicitArgs.元素为arg
 					for (Object arg : explicitArgs) {
+						// 如果arg不为null，将arg的简单类名添加到argTypes中；否则将"null"添加到argTypes中
 						argTypes.add(arg != null ? arg.getClass().getSimpleName() : "null");
 					}
 				}
+				// 如果resolvedValues不为null
 				else if (resolvedValues != null) {
+					// 定义一个用于存放resolvedValues的泛型参数值和方法参数值的LinkedHashSet对象
 					Set<ValueHolder> valueHolders = new LinkedHashSet<>(resolvedValues.getArgumentCount());
+					// 将resolvedValues的方法参数值添加到valueHolders中
 					valueHolders.addAll(resolvedValues.getIndexedArgumentValues().values());
+					// 将resolvedValues的泛型参数值添加到valueHolders中
 					valueHolders.addAll(resolvedValues.getGenericArgumentValues());
+					// 遍历valueHolders，元素为value
 					for (ValueHolder value : valueHolders) {
+						// 如果value的参数类型不为null，就获取该参数类型的简单类名；否则(如果value的参数值不为null，即获取该参数值的简单类名;否则为"null")
 						String argType = (value.getType() != null ? ClassUtils.getShortName(value.getType()) :
 								(value.getValue() != null ? value.getValue().getClass().getSimpleName() : "null"));
+						// 将argType添加到argTypes中
 						argTypes.add(argType);
 					}
 				}
+				// 将argType转换成字符串，以","隔开元素.用于描述Bean创建异常
 				String argDesc = StringUtils.collectionToCommaDelimitedString(argTypes);
+				// 抛出BeanCreationException:找不到匹配的工厂方法：工厂Bean'mbd.getFactoryBeanName()';工厂方法
+				// 'mbd.getFactoryMethodName()(argDesc)'.检查是否存在具体指定名称和参数的方法，并且该方法时静态/非静态的.
 				throw new BeanCreationException(mbd.getResourceDescription(), beanName,
 						"No matching factory method found on class [" + factoryClass.getName() + "]: " +
 						(mbd.getFactoryBeanName() != null ?
@@ -640,25 +723,33 @@ class ConstructorResolver {
 						"exists and that it is " +
 						(isStatic ? "static" : "non-static") + ".");
 			}
+			// 如果factoryMethodToUse时无返回值方法
 			else if (void.class == factoryMethodToUse.getReturnType()) {
 				throw new BeanCreationException(mbd.getResourceDescription(), beanName,
-						"Invalid factory method '" + mbd.getFactoryMethodName() + "' on class [" +
-						factoryClass.getName() + "]: needs to have a non-void return type!");
+						"Invalid factory method '" + mbd.getFactoryMethodName() +
+								"': needs to have a non-void return type!");
 			}
+			// 如果ambiguousFactoryMethods不为null
 			else if (ambiguousFactoryMethods != null) {
 				throw new BeanCreationException(mbd.getResourceDescription(), beanName,
-						"Ambiguous factory method matches found on class [" + factoryClass.getName() + "] " +
-						"(hint: specify index/type/name arguments for simple parameters to avoid type ambiguities): " +
-						ambiguousFactoryMethods);
+						"Ambiguous factory method matches found in bean '" + beanName + "' " +
+								"(hint: specify index/type/name arguments for simple parameters to avoid type ambiguities): " +
+								ambiguousFactoryMethods);
 			}
 
+			// 将筛选出来的工厂方法和解析出来的参数值缓存到mdb中
+			// 如果explicitArgs为null且argsHolderToUser不为null
 			if (explicitArgs == null && argsHolderToUse != null) {
+				// 让mbd的唯一方法候选【{@link RootBeanDefinition#factoryMethodToIntrospect}】引用factoryMethodToUse
 				mbd.factoryMethodToIntrospect = factoryMethodToUse;
+				// 将argsHolderToUse所得到的参数值属性缓存到mbd对应的属性中
 				argsHolderToUse.storeCache(mbd, factoryMethodToUse);
 			}
 		}
 
+		// 使用factoryBean生成与beanName对应的Bean对象,并将该Bean对象保存到bw中
 		bw.setBeanInstance(instantiate(beanName, mbd, factoryBean, factoryMethodToUse, argsToUse));
+		// 将bw返回出去
 		return bw;
 	}
 
@@ -666,13 +757,16 @@ class ConstructorResolver {
 			@Nullable Object factoryBean, Method factoryMethod, Object[] args) {
 
 		try {
+			// 安全管理器
 			if (System.getSecurityManager() != null) {
+				// 使用特权方式运行：在beanFactory中返回beanName的Bean实例，并通过factoryMethod创建它
 				return AccessController.doPrivileged((PrivilegedAction<Object>) () ->
 						this.beanFactory.getInstantiationStrategy().instantiate(
 								mbd, beanName, this.beanFactory, factoryBean, factoryMethod, args),
 						this.beanFactory.getAccessControlContext());
 			}
 			else {
+				// 实例化
 				return this.beanFactory.getInstantiationStrategy().instantiate(
 						mbd, beanName, this.beanFactory, factoryBean, factoryMethod, args);
 			}
