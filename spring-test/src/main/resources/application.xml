@@ -33,6 +33,7 @@ http://www.springframework.org/schema/beans/spring-beans-2.5.xsd http://www.spri
 		<lookup-method name="eat" bean="banana"/>
 	</bean>
 -->
+	<context:component-scan base-package="org.springframework.scan"/>
 
 	<bean id="logUtil" class="org.springframework.aop.service.LogUtil" scope="prototype"/>
 	<bean id="myCalculator" class="org.springframework.aop.service.MyCalculator" >
