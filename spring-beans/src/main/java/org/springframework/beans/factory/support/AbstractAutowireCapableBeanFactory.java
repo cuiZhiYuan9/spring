@@ -1927,17 +1927,25 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	private void invokeAwareMethods(String beanName, Object bean) {
+		//如果 bean 是 Aware 实例
 		if (bean instanceof Aware) {
+			//如果bean是BeanNameAware实例
 			if (bean instanceof BeanNameAware) {
+				//调用 bean 的setBeanName方法
 				((BeanNameAware) bean).setBeanName(beanName);
 			}
+			//如果bean是 BeanClassLoaderAware 实例
 			if (bean instanceof BeanClassLoaderAware) {
+				//获取此工厂的类加载器以加载Bean类(即使无法使用系统ClassLoader,也只能为null)
 				ClassLoader bcl = getBeanClassLoader();
 				if (bcl != null) {
+					//调用 bean 的 setBeanClassLoader 方法
 					((BeanClassLoaderAware) bean).setBeanClassLoader(bcl);
 				}
 			}
+			//如果bean是 BeanFactoryAware 实例
 			if (bean instanceof BeanFactoryAware) {
+				// //调用 bean 的 setBeanFactory 方法
 				((BeanFactoryAware) bean).setBeanFactory(AbstractAutowireCapableBeanFactory.this);
 			}
 		}
