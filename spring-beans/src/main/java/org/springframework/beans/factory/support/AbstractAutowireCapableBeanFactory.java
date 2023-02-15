@@ -1257,7 +1257,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
 		// 以下情况符合其一即可进入
 		/*
-			* 存在可循阿德构造方法
+			* 存在可循环的构造方法
 			* 自动装配模型为构造函数得自动装配
 			* 给BEanDefinition中设置了构造参数
 			* 有参与构造函数列表得参数
