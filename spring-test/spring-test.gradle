@@ -85,6 +85,9 @@ dependencies {
 	implementation group: 'org.mybatis', name: 'mybatis', version: '3.5.11'
 	// https://mvnrepository.com/artifact/org.projectlombok/lombok
 	//compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.24'
+	// https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-compiler-embeddable
+	//runtimeOnly group: 'org.jetbrains.kotlin', name: 'kotlin-compiler-embeddable', version: '1.6.21'
+
 
 }
 
