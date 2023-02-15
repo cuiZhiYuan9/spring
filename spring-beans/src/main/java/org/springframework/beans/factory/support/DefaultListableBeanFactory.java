@@ -1276,7 +1276,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		try {
 			// 尝试使用descriptor 的快捷方法得到最近的候选的bean对象
 			// resolveShortcut   解决针对给定工厂的这种依赖关系的快捷方式，例如 考虑一些预先解决的信息
-			// 尝试调用该工厂解决 这种依赖关系的快捷方式来获取beanName 对应的bean对象 默认返回null
+			// 尝试调用该工厂解决 这种依赖关系的快捷方式来获取beanName 对应的bean对象 默认返回null，重写方式为getBean() 一个超级大的递归
 			// 获取针对该工厂的这种依赖关系的快捷解析最佳的候选bean对象
 			Object shortcut = descriptor.resolveShortcut(this);
 			// 如果shortcut不为空返回

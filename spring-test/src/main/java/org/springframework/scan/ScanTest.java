@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class ScanTest {
 
 	@Bean
-	public Person person(@Value("jdbc.driverClassName")String name){
+	public Person person(@Value("${jdbc.driverClassName}")String name){
 		Person person = new Person();
 		person.setId(name);
 		return person;

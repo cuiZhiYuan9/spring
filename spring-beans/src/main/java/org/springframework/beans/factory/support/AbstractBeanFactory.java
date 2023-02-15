@@ -930,6 +930,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		}
 		String result = value;
 		for (StringValueResolver resolver : this.embeddedValueResolvers) {
+			// 解析表达式
 			result = resolver.resolveStringValue(result);
 			if (result == null) {
 				return null;

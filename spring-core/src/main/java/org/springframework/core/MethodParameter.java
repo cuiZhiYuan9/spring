@@ -630,6 +630,7 @@ public class MethodParameter {
 	 * Return the annotations associated with the specific method/constructor parameter.
 	 */
 	public Annotation[] getParameterAnnotations() {
+		// todo 这里为什么会拿到代理对象的注解 ?????
 		Annotation[] paramAnns = this.parameterAnnotations;
 		if (paramAnns == null) {
 			Annotation[][] annotationArray = this.executable.getParameterAnnotations();

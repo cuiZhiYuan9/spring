@@ -436,7 +436,7 @@ class ConstructorResolver {
 		ArgumentsHolder argsHolderToUse = null;
 		// 声明一个要使用的参数值数组,默认为null
 		Object[] argsToUse = null;
-		// 不为空，猜测是参数
+		// 不为空，猜测是参数 一般懒加载的才会传递参数，启动容器就初始化的一般不会有参数
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
@@ -449,6 +449,8 @@ class ConstructorResolver {
 				// 指定factoryMethodToUser引用mbd已解析的构造函数或工厂方法对象
 				factoryMethodToUse = (Method) mbd.resolvedConstructorOrFactoryMethod;
 				// 如果factoryMethodToUser不为null且mbd已解析构造函数参数
+				// 不为空表示已经使用过工厂方法，现在是再次使用工厂方法，
+				//  一般原型模式和Scope模式采用的上，直接使用该工厂方法和缓存的参数
 				if (factoryMethodToUse != null && mbd.constructorArgumentsResolved) {
 					// Found a cached factory method...
 					argsToUse = mbd.resolvedConstructorArguments;
@@ -463,6 +465,7 @@ class ConstructorResolver {
 		}
 
 		// 如果没解析过，就获取factoryClass的用户定义类型，因为此时factoryClass可能是CGLIB动态代理类型，
+		// 也就是你在@Configuration 下写@Bean 是代理模式 @Component不为代理模式
 		// 所以要获取用父类的类型。如果工厂方法是唯一的，就是没重载的，就获取解析的工厂方法，如果不为空，就添加到一个不可变列表里，
 		// 如果为空的话，就要去找出factoryClass的以及父类的所有的方法，进一步找出方法修饰符一致且名字跟工厂方法名字相同的且是bean注解的方法，并放入列表里。
 		if (factoryMethodToUse == null || argsToUse == null) {
@@ -486,13 +489,15 @@ class ConstructorResolver {
 				candidates = new ArrayList<>();
 				Method[] rawCandidates = getCandidateMethods(factoryClass, mbd);
 				for (Method candidate : rawCandidates) {
+					// 查找到与工厂方法同名的候选方法,没有@Bean的同名方法不被考虑
 					if (Modifier.isStatic(candidate.getModifiers()) == isStatic && mbd.isFactoryMethod(candidate)) {
 						candidates.add(candidate);
 					}
 				}
 			}
-			// 仅有一个，参数为空，没有构造函数 就直接使用该候选方法生成与beanName对应的Bean对象封装到bw中返回出去
+			// 仅有一个，调用getBean()所传参数为空，没有构造函数 就直接使用该候选方法生成与beanName对应的Bean对象封装到bw中返回出去
 			if (candidates.size() == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
+				// 也就是我们的@Bean对应的方法
 				Method uniqueCandidate = candidates.get(0);
 				// 参数个数为0
 				if (uniqueCandidate.getParameterCount() == 0) {
@@ -517,7 +522,8 @@ class ConstructorResolver {
 			if (candidates.size() > 1) {  // explicitly skip immutable singletonList
 				candidates.sort(AutowireUtils.EXECUTABLE_COMPARATOR);
 			}
-
+			// 有多个与工厂方法同名的候选方法时，进行排序。public的方法会往前排，然后参数个数多的方法往前排
+			//具体排序代码--->org.springframework.beans.factory.support.AutowireUtils#sortConstructors
 			// ConstructorArgumentValues：构造函数参数值的Holder,通常作为BeanDefinition的一部分,支持构造函数参数列表中特定索引的值
 			// 以及按类型的通用参数匹配
 			// 定义一个用于存放解析后的构造函数参数值的ConstructorArgumentValues对象
@@ -558,7 +564,7 @@ class ConstructorResolver {
 			// 定义一个用于UnsatisfiedDependencyException的列表
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
-			// 遍历candidates，元素名为candidate
+			// 遍历candidates，元素名为candidate 也就是我们的@Bean
 			for (Method candidate : candidates) {
 				// 获取参数的个数
 				int parameterCount = candidate.getParameterCount();
@@ -841,8 +847,9 @@ class ConstructorResolver {
 			String beanName, RootBeanDefinition mbd, @Nullable ConstructorArgumentValues resolvedValues,
 			BeanWrapper bw, Class<?>[] paramTypes, @Nullable String[] paramNames, Executable executable,
 			boolean autowiring, boolean fallback) throws UnsatisfiedDependencyException {
-
+		// 类型转换器
 		TypeConverter customConverter = this.beanFactory.getCustomTypeConverter();
+		// 大部分都是返回beanWrapper
 		TypeConverter converter = (customConverter != null ? customConverter : bw);
 
 		ArgumentsHolder args = new ArgumentsHolder(paramTypes.length);
