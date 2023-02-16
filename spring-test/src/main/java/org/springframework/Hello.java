@@ -1,5 +1,6 @@
 package org.springframework;
 
+import org.springframework.aop.service.LogUtil;
 import org.springframework.aop.service.MyCalculator;
 import org.springframework.cglib.core.DebuggingClassWriter;
 import org.springframework.context.ApplicationContext;
@@ -13,6 +14,7 @@ public class Hello {
 		saveGeneratedCgGlibProxyFiles(System.getProperty("user.dir")+"/proxy");
 		ApplicationContext a = new ClassPathXmlApplicationContext("application.xml");
 		MyCalculator bean = a.getBean(MyCalculator.class);
+		a.getBean(LogUtil.class);
 		bean.add(1,2);
 
 	}
