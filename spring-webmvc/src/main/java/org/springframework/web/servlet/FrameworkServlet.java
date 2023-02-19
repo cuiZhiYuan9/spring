@@ -567,7 +567,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 
 		// 如果构造方法中已经传入webApplicationContext属性，则直接使用
 		// 此方式主要用于servlet3.0之后的环境，也就是说可以通过ServletContext.addServlet的方法注册servlet，此时就可以在创建FrameworkServlet和
-		// 其子类的时候通过构造方法传递已经准备好的webApplicationContext
+		// 其子类的时候通过构造方法传递已经准备好的webApplicationContext 也就是dispatcherServlet构造方法
 		if (this.webApplicationContext != null) {
 			// A context instance was injected at construction time -> use it
 			wac = this.webApplicationContext;
@@ -705,6 +705,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	}
 
 	protected void configureAndRefreshWebApplicationContext(ConfigurableWebApplicationContext wac) {
+		// 替换id
 		if (ObjectUtils.identityToString(wac).equals(wac.getId())) {
 			// The application context id is still set to its original default value
 			// -> assign a more useful id based on available information
@@ -717,22 +718,35 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 						ObjectUtils.getDisplayString(getServletContext().getContextPath()) + '/' + getServletName());
 			}
 		}
-
+		// 设置基本属性
+		// context指的是web.xml全局的配置
 		wac.setServletContext(getServletContext());
+		// 指的是一个servlet的配置像
 		wac.setServletConfig(getServletConfig());
 		wac.setNamespace(getNamespace());
+		// 添加监听器sourceFile
+		/*
+			spring中的观察者模式
+				广播器（多播器） 当某个操作完成后可以发送具体的监听事件-->发布事件-->调用多播器的方式来发布事件---->循环对应的监听器找到合适的监听器来进行事件处理
+				监听器		---> 必须要存在一个监听器集合再前置操作中像当前集合中添加监听器方便后续做事件监听
+				监听事件
+
+		 */
 		wac.addApplicationListener(new SourceFilteringListener(wac, new ContextRefreshListener()));
 
 		// The wac environment's #initPropertySources will be called in any case when the context
 		// is refreshed; do it eagerly here to ensure servlet property sources are in place for
 		// use in any post-processing or initialization that occurs below prior to #refresh
+		// 获取环境对象并且添加相关属性
 		ConfigurableEnvironment env = wac.getEnvironment();
 		if (env instanceof ConfigurableWebEnvironment) {
 			((ConfigurableWebEnvironment) env).initPropertySources(getServletContext(), getServletConfig());
 		}
-
+		// 执行处理完webApplicationContext   空方法
 		postProcessWebApplicationContext(wac);
+		//  执行自定义的初始化context
 		applyInitializers(wac);
+		// 刷新wac
 		wac.refresh();
 	}
 
@@ -780,6 +794,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	 * @see ConfigurableApplicationContext#refresh()
 	 */
 	protected void applyInitializers(ConfigurableApplicationContext wac) {
+		// 获取web.xml中的InitParameter 来进行配置
 		String globalClassNames = getServletContext().getInitParameter(ContextLoader.GLOBAL_INITIALIZER_CLASSES_PARAM);
 		if (globalClassNames != null) {
 			for (String className : StringUtils.tokenizeToStringArray(globalClassNames, INIT_PARAM_DELIMITERS)) {

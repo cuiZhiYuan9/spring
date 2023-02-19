@@ -14,7 +14,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 import javax.servlet.ServletContext;
 import java.io.File;
 
-@RestController
+//@RestController
 public class CC {
 
 	@GetMapping("/ping")

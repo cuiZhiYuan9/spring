@@ -60,7 +60,7 @@ public class ContextCleanupListener implements ServletContextListener {
 	 * @param servletContext the ServletContext to check
 	 * @see DisposableBean#destroy()
 	 */
-	static void cleanupAttributes(ServletContext servletContext) {
+	public static void cleanupAttributes(ServletContext servletContext) {
 		Enumeration<String> attrNames = servletContext.getAttributeNames();
 		while (attrNames.hasMoreElements()) {
 			String attrName = attrNames.nextElement();
