@@ -7,5 +7,8 @@
         <property name="prefix" value="/WEB-INF/jsp/" />
         <property name="suffix" value=".jsp" />
     </bean>
-
+    <bean id = "user" class="org.springframework.mvc.User">
+        <property name="id" value="zhangsan"/>
+        <property name="name" value="12"/>
+    </bean>
 </beans>

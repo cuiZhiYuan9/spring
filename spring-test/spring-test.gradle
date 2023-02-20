@@ -72,6 +72,7 @@ dependencies {
 	testCompile("org.apache.httpcomponents:httpclient")
 	testCompile("io.projectreactor.netty:reactor-netty")
 	testCompile("de.bechte.junit:junit-hierarchicalcontextrunner")
+	testCompile("junit:junit:4.12")
 	testRuntime("org.junit.vintage:junit-vintage-engine") {
 		exclude group: "junit", module: "junit"
 	}
@@ -87,7 +88,6 @@ dependencies {
 	//compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.24'
 	// https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-compiler-embeddable
 	//runtimeOnly group: 'org.jetbrains.kotlin', name: 'kotlin-compiler-embeddable', version: '1.6.21'
-
 
 }
 

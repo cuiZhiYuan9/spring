@@ -382,34 +382,53 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @since 4.2
 	 */
 	protected void publishEvent(Object event, @Nullable ResolvableType eventType) {
+		// 如果event为null，抛出异常
 		Assert.notNull(event, "Event must not be null");
 
 		// Decorate event as an ApplicationEvent if necessary
+		// 装饰事件作为一个应用事件，如果有必要
 		ApplicationEvent applicationEvent;
+		// 如果event是ApplicationEvent的实例
 		if (event instanceof ApplicationEvent) {
+			// 将event强转为ApplicationEvent对象
 			applicationEvent = (ApplicationEvent) event;
 		}
 		else {
+			// PayloadApplicationEvent：携带任意有效负载的ApplicationEvent。
+			// 创建一个新的PayloadApplicationEvent
 			applicationEvent = new PayloadApplicationEvent<>(this, event);
+			// 如果eventType为 null
 			if (eventType == null) {
+				// 将applicationEvent转换为PayloadApplicationEvent 象，引用其ResolvableType对象
 				eventType = ((PayloadApplicationEvent<?>) applicationEvent).getResolvableType();
 			}
 		}
 
 		// Multicast right now if possible - or lazily once the multicaster is initialized
+		// 如果可能的话，现在就进行组播——或者在组播初始化后延迟
+		// earlyApplicationEvents：在多播程序设置之前发布的ApplicationEvent
+		// 如果earlyApplicationEvents不为 null，这种情况只在上下文的多播器还没有初始化的情况下才会成立，会将applicationEvent
+		// 添加到earlyApplicationEvents保存起来，待多博器初始化后才继续进行多播到适当的监听器
 		if (this.earlyApplicationEvents != null) {
+			//将applicationEvent添加到 earlyApplicationEvents
 			this.earlyApplicationEvents.add(applicationEvent);
 		}
 		else {
+			// 多播applicationEvent到适当的监听器
 			getApplicationEventMulticaster().multicastEvent(applicationEvent, eventType);
 		}
 
 		// Publish event via parent context as well...
+		// 通过父上下文发布事件
+		// 如果parent不为null
 		if (this.parent != null) {
+			// 如果parent是AbstractApplicationContext的实例
 			if (this.parent instanceof AbstractApplicationContext) {
+				// 将event多播到所有适合的监听器。如果event不是ApplicationEvent实例，会将其封装成PayloadApplicationEvent对象再进行多播
 				((AbstractApplicationContext) this.parent).publishEvent(event, eventType);
 			}
 			else {
+				// 通知与event事件应用程序注册的所有匹配的监听器
 				this.parent.publishEvent(event);
 			}
 		}
@@ -956,12 +975,15 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void finishRefresh() {
 		// Clear context-level resource caches (such as ASM metadata from scanning).
+		// 清楚上下文资源的缓存
 		clearResourceCaches();
 
 		// Initialize lifecycle processor for this context.
+		// 为上下文初始化生命周期处理器
 		initLifecycleProcessor();
 
 		// Propagate refresh to lifecycle processor first.
+		//将刷新传播到新的生命周期处理器
 		getLifecycleProcessor().onRefresh();
 
 		// Publish the final event.
