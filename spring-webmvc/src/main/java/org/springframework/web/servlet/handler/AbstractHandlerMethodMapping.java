@@ -213,6 +213,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 */
 	protected void initHandlerMethods() {
 		for (String beanName : getCandidateBeanNames()) {
+			// 排除 目标代理类 aop相关
 			if (!beanName.startsWith(SCOPED_TARGET_NAME_PREFIX)) {
 				processCandidateBean(beanName);
 			}
@@ -265,14 +266,18 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	 * @see #getMappingForMethod
 	 */
 	protected void detectHandlerMethods(Object handler) {
+		// 获取handler的类型
 		Class<?> handlerType = (handler instanceof String ?
 				obtainApplicationContext().getType((String) handler) : handler.getClass());
 
 		if (handlerType != null) {
+			// 如果是cglib代理的子对象类型，则返回父类型，否则直接返回传入的类型
 			Class<?> userType = ClassUtils.getUserClass(handlerType);
+			// 保存handler与匹配条件的对应关系，用于给registerHandlerMethod传入匹配条件
 			Map<Method, T> methods = MethodIntrospector.selectMethods(userType,
 					(MethodIntrospector.MetadataLookup<T>) method -> {
 						try {
+							// 创建该方法对应的 Mapping 对象，例如根据 @RequestMapping 注解创建 RequestMappingInfo 对象
 							return getMappingForMethod(method, userType);
 						}
 						catch (Throwable ex) {
@@ -283,6 +288,7 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 			if (logger.isTraceEnabled()) {
 				logger.trace(formatMappings(userType, methods));
 			}
+			// 将符合要求的method注册起来，也就是保存到三个map中
 			methods.forEach((method, mapping) -> {
 				Method invocableMethod = AopUtils.selectInvocableMethod(method, userType);
 				registerHandlerMethod(handler, invocableMethod, mapping);
@@ -361,14 +367,20 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 	@Override
 	@Nullable
 	protected HandlerMethod getHandlerInternal(HttpServletRequest request) throws Exception {
+		// 获取访问的路径，一般类似于request.getServletPath()，返回不含contextPath的访问路径
 		String lookupPath = getUrlPathHelper().getLookupPathForRequest(request);
 		request.setAttribute(LOOKUP_PATH, lookupPath);
+		// 获得读锁
 		this.mappingRegistry.acquireReadLock();
 		try {
+			// 获取HandlerMethod作为handler对象，这里涉及到路径匹配的优先级
+			// 优先级: 精确匹配>最长路径匹配>扩展名匹配
 			HandlerMethod handlerMethod = lookupHandlerMethod(lookupPath, request);
+			// handlerMethod内部包含有bean对象，其实指的是对应的controller
 			return (handlerMethod != null ? handlerMethod.createWithResolvedBean() : null);
 		}
 		finally {
+			//  释放读锁
 			this.mappingRegistry.releaseReadLock();
 		}
 	}
@@ -598,31 +610,44 @@ public abstract class AbstractHandlerMethodMapping<T> extends AbstractHandlerMap
 					throw new IllegalStateException("Unsupported suspending handler method detected: " + method);
 				}
 			}
+			// 获得写锁
 			this.readWriteLock.writeLock().lock();
 			try {
+				// 创建HandlerMethod对象
 				HandlerMethod handlerMethod = createHandlerMethod(handler, method);
+				// 校验当前mapping是否存在对应的HandlerMethod对象，如果已存在但不是当前的handlerMethod对象则抛出异常
 				validateMethodMapping(handlerMethod, mapping);
+				// 将mapping与handlerMethod的映射关系保存至this.mappingLookup
 				this.mappingLookup.put(mapping, handlerMethod);
 
+				// 获得mapping对应的普通URL数组
 				List<String> directUrls = getDirectUrls(mapping);
+				// 将url和mapping的映射关系保存至this.urlLookup
 				for (String url : directUrls) {
 					this.urlLookup.add(url, mapping);
 				}
 
+				// 初始化nameLookup
 				String name = null;
 				if (getNamingStrategy() != null) {
+					// 获得Mapping的名字
 					name = getNamingStrategy().getName(handlerMethod, mapping);
+					// 将mapping的名字与HandlerMethod的映射关系保存至this.nameLookup
 					addMappingName(name, handlerMethod);
 				}
 
+				// 初始化CorsConfiguration配置对象
 				CorsConfiguration corsConfig = initCorsConfiguration(handler, method, mapping);
 				if (corsConfig != null) {
 					this.corsLookup.put(handlerMethod, corsConfig);
 				}
 
+				// 创建MappingRegistration对象
+				// 并与mapping映射添加到registry注册表中
 				this.registry.put(mapping, new MappingRegistration<>(mapping, handlerMethod, directUrls, name));
 			}
 			finally {
+				// 释放写锁
 				this.readWriteLock.writeLock().unlock();
 			}
 		}

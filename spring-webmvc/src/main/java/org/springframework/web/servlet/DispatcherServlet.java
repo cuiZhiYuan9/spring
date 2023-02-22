@@ -512,15 +512,23 @@ public class DispatcherServlet extends FrameworkServlet {
 			 MultipartResolver
 			 FlashMapManager
 		 */
-		// 初始化文件上传的
+		// 初始化 MultipartResolver:主要用来处理文件上传.如果定义过当前类型的bean对象，那么直接获取，如果没有的话，可以为null
 		initMultipartResolver(context);
+		// 初始化 LocaleResolver:主要用来处理国际化配置,基于URL参数的配置(AcceptHeaderLocaleResolver)，基于session的配置(SessionLocaleResolver)，基于cookie的配置(CookieLocaleResolver)
 		initLocaleResolver(context);
+		// 初始化 ThemeResolver:主要用来设置主题Theme
 		initThemeResolver(context);
+		// 初始化 HandlerMapping:映射器，用来将对应的request跟controller进行对应
 		initHandlerMappings(context);
+		// 初始化 HandlerAdapter:处理适配器，主要包含Http请求处理器适配器，简单控制器处理器适配器，注解方法处理器适配器
 		initHandlerAdapters(context);
+		// 初始化 HandlerExceptionResolver:基于HandlerExceptionResolver接口的异常处理
 		initHandlerExceptionResolvers(context);
+		// 初始化 RequestToViewNameTranslator:当controller处理器方法没有返回一个View对象或逻辑视图名称，并且在该方法中没有直接往response的输出流里面写数据的时候，spring将会采用约定好的方式提供一个逻辑视图名称
 		initRequestToViewNameTranslator(context);
+		// 初始化 ViewResolver: 将ModelAndView选择合适的视图进行渲染的处理器
 		initViewResolvers(context);
+		// 初始化 FlashMapManager: 提供请求存储属性，可供其他请求使用
 		initFlashMapManager(context);
 	}
 
@@ -531,6 +539,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	private void initMultipartResolver(ApplicationContext context) {
 		try {
+			// 从spring上下文获取名称为 multipartResolver ，类型为MultipartResolver的Bean
 			this.multipartResolver = context.getBean(MULTIPART_RESOLVER_BEAN_NAME, MultipartResolver.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Detected " + this.multipartResolver);
@@ -555,6 +564,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	private void initLocaleResolver(ApplicationContext context) {
 		try {
+			// 从上下文中获取Bean名称为 LocaleResolver的对象
 			this.localeResolver = context.getBean(LOCALE_RESOLVER_BEAN_NAME, LocaleResolver.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("Detected " + this.localeResolver);
@@ -565,6 +575,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 		catch (NoSuchBeanDefinitionException ex) {
 			// We need to use the default.
+			// 从配置文件中获取默认的AcceptHeaderLocaleResolver对象
 			this.localeResolver = getDefaultStrategy(context, LocaleResolver.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("No LocaleResolver '" + LOCALE_RESOLVER_BEAN_NAME +
@@ -590,6 +601,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 		catch (NoSuchBeanDefinitionException ex) {
 			// We need to use the default.
+			// 从配置文件中获取默认的FixedThemeResolver
 			this.themeResolver = getDefaultStrategy(context, ThemeResolver.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("No ThemeResolver '" + THEME_RESOLVER_BEAN_NAME +
@@ -604,18 +616,23 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * we default to BeanNameUrlHandlerMapping.
 	 */
 	private void initHandlerMappings(ApplicationContext context) {
+		// 将handlerMappings置空
 		this.handlerMappings = null;
 
+		// 如果开启探测功能，则扫描已注册的HandlerMapping的bean，添加到handlerMappings中
 		if (this.detectAllHandlerMappings) {
 			// Find all HandlerMappings in the ApplicationContext, including ancestor contexts.
+			// 扫描已注册的handlerMapping的bean
 			Map<String, HandlerMapping> matchingBeans =
 					BeanFactoryUtils.beansOfTypeIncludingAncestors(context, HandlerMapping.class, true, false);
+			// 添加到handlerMappings中，并进行排序
 			if (!matchingBeans.isEmpty()) {
 				this.handlerMappings = new ArrayList<>(matchingBeans.values());
 				// We keep HandlerMappings in sorted order.
 				AnnotationAwareOrderComparator.sort(this.handlerMappings);
 			}
 		}
+		// 如果关闭探测功能，则获取Bean名称为handlerMapping对应的bean，将其添加到handlerMappings
 		else {
 			try {
 				HandlerMapping hm = context.getBean(HANDLER_MAPPING_BEAN_NAME, HandlerMapping.class);
@@ -628,11 +645,12 @@ public class DispatcherServlet extends FrameworkServlet {
 
 		// Ensure we have at least one HandlerMapping, by registering
 		// a default HandlerMapping if no other mappings are found.
+		// 如果未获得到，则获得默认配置的handlerMapping类
 		if (this.handlerMappings == null) {
 			this.handlerMappings = getDefaultStrategies(context, HandlerMapping.class);
 			if (logger.isTraceEnabled()) {
 				logger.trace("No HandlerMappings declared for servlet '" + getServletName() +
-						"': using default strategies from DispatcherServlet.properties");
+						"': using default strategies from DispatcherServlet_test.properties");
 			}
 		}
 	}
@@ -871,26 +889,33 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@SuppressWarnings("unchecked")
 	protected <T> List<T> getDefaultStrategies(ApplicationContext context, Class<T> strategyInterface) {
+		// 获得strategyInterface对应的value值
 		String key = strategyInterface.getName();
+		// 创建value对应的对象们，并返回
 		String value = defaultStrategies.getProperty(key);
 		if (value != null) {
+			// 基于","分隔，创建classNames数组
 			String[] classNames = StringUtils.commaDelimitedListToStringArray(value);
+			// 创建strategyInterface集合
 			List<T> strategies = new ArrayList<>(classNames.length);
+			// 遍历classNames数组，创建对应的类，添加到strategyInterface中
 			for (String className : classNames) {
 				try {
+					// 获得className类
 					Class<?> clazz = ClassUtils.forName(className, DispatcherServlet.class.getClassLoader());
+					// 创建className对应的类，并添加到strategies中
 					Object strategy = createDefaultStrategy(context, clazz);
 					strategies.add((T) strategy);
 				}
 				catch (ClassNotFoundException ex) {
 					throw new BeanInitializationException(
 							"Could not find DispatcherServlet's default strategy class [" + className +
-							"] for interface [" + key + "]", ex);
+									"] for interface [" + key + "]", ex);
 				}
 				catch (LinkageError err) {
 					throw new BeanInitializationException(
 							"Unresolvable class definition for DispatcherServlet's default strategy class [" +
-							className + "] for interface [" + key + "]", err);
+									className + "] for interface [" + key + "]", err);
 				}
 			}
 			return strategies;
@@ -1216,7 +1241,9 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * @see MultipartResolver#resolveMultipart
 	 */
 	protected HttpServletRequest checkMultipart(HttpServletRequest request) throws MultipartException {
+		// 是否有Multipart请求
 		if (this.multipartResolver != null && this.multipartResolver.isMultipart(request)) {
+			// 是否是本地请求
 			if (WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class) != null) {
 				if (request.getDispatcherType().equals(DispatcherType.REQUEST)) {
 					logger.trace("Request already resolved to MultipartHttpServletRequest, e.g. by MultipartFilter");
@@ -1228,6 +1255,7 @@ public class DispatcherServlet extends FrameworkServlet {
 			}
 			else {
 				try {
+					// HttpServletRequest封装成MultipartHttpServletRequest 解析参数和文件
 					return this.multipartResolver.resolveMultipart(request);
 				}
 				catch (MultipartException ex) {
@@ -1282,6 +1310,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	@Nullable
 	protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+		// 这里的handler在DispatcherHandler.properties定义得
 		if (this.handlerMappings != null) {
 			for (HandlerMapping mapping : this.handlerMappings) {
 				HandlerExecutionChain handler = mapping.getHandler(request);
