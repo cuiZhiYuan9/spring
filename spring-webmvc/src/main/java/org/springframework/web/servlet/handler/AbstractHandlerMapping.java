@@ -310,6 +310,8 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	 * @param mappedInterceptors an empty list to add to
 	 */
 	protected void detectMappedInterceptors(List<HandlerInterceptor> mappedInterceptors) {
+		// 扫描已注册的MappedInterceptor的Bean，添加到mappedInterceptors中
+		// MappedInterceptor会根据请求路径做匹配，是否进行拦截
 		mappedInterceptors.addAll(BeanFactoryUtils.beansOfTypeIncludingAncestors(
 				obtainApplicationContext(), MappedInterceptor.class, true, false).values());
 	}
@@ -393,19 +395,24 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 	@Override
 	@Nullable
 	public final HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+		// 获得处理器（HandlerMethod或者HandlerExecutionChain），该方法是抽象方法，由子类实现
 		Object handler = getHandlerInternal(request);
+		// 获得不到，则使用默认处理器
 		if (handler == null) {
 			handler = getDefaultHandler();
 		}
+		// 还是获得不到，则返回 null
 		if (handler == null) {
 			return null;
 		}
 		// Bean name or resolved handler?
+		// 如果找到的处理器是String类型，则从Spring容器中找到对应的Bean作为处理器
 		if (handler instanceof String) {
 			String handlerName = (String) handler;
 			handler = obtainApplicationContext().getBean(handlerName);
 		}
 
+		// 创建HandlerExecutionChain对象（包含处理器和拦截器）
 		HandlerExecutionChain executionChain = getHandlerExecutionChain(handler, request);
 
 		if (logger.isTraceEnabled()) {
@@ -415,6 +422,7 @@ public abstract class AbstractHandlerMapping extends WebApplicationObjectSupport
 			logger.debug("Mapped to " + executionChain.getHandler());
 		}
 
+		// 针对跨域请求的处理
 		if (hasCorsConfigurationSource(handler) || CorsUtils.isPreFlightRequest(request)) {
 			CorsConfiguration config = (this.corsConfigurationSource != null ? this.corsConfigurationSource.getCorsConfiguration(request) : null);
 			CorsConfiguration handlerConfig = getCorsConfiguration(handler, request);

@@ -88,6 +88,9 @@ dependencies {
 	//compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.24'
 	// https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-compiler-embeddable
 	//runtimeOnly group: 'org.jetbrains.kotlin', name: 'kotlin-compiler-embeddable', version: '1.6.21'
+	// https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload
+	implementation group: 'commons-fileupload', name: 'commons-fileupload', version: '1.4'
+
 
 }
 

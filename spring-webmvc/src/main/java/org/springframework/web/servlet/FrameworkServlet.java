@@ -943,7 +943,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	@Override
 	protected final void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-
+		//处理请求
 		processRequest(request, response);
 	}
 
@@ -1036,22 +1036,25 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	 */
 	protected final void processRequest(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-
+		// 时间
 		long startTime = System.currentTimeMillis();
+		// 记录异常，用于保存处理请求过程中发送的异常
 		Throwable failureCause = null;
-
+		// 获取LocaleContextHolder 中原来的LocaleContextHolder·
 		LocaleContext previousLocaleContext = LocaleContextHolder.getLocaleContext();
 		LocaleContext localeContext = buildLocaleContext(request);
-
+		// 获取RequestContextHolder总原来保存的RequestAttribute(管理request和session得属性)
 		RequestAttributes previousAttributes = RequestContextHolder.getRequestAttributes();
+		// 获取当前请求的ServletRequestAttribute
 		ServletRequestAttributes requestAttributes = buildRequestAttributes(request, response, previousAttributes);
-
+		// 获取异步管理器
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 		asyncManager.registerCallableInterceptor(FrameworkServlet.class.getName(), new RequestBindingInterceptor());
-
+		// 赋值操作对LocaleContextHolder
 		initContextHolders(request, localeContext, requestAttributes);
 
 		try {
+			//真正执行逻辑
 			doService(request, response);
 		}
 		catch (ServletException | IOException ex) {

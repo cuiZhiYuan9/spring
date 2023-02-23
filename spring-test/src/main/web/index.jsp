@@ -12,5 +12,13 @@
   </head>
   <body>
   $END$
+  <form action="/spring_spring_test_main_war_exploded/fileupload" enctype="multipart/form-data" method="post">
+    <label>
+      描述：
+      <input type="text" name="desc">
+    </label><br><br>
+    文件：<input type="file" name="file"><br><br>
+    <input type="submit" value="上传">
+  </form>
   </body>
 </html>
