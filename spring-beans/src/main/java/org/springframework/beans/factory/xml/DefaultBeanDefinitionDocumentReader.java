@@ -175,7 +175,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 					if (delegate.isDefaultNamespace(ele)) {// 解析 default namespace 下面的几个元素
 						parseDefaultElement(ele, delegate);
 					}
-					else {
+					else { //解析<context:component-scan>
 						delegate.parseCustomElement(ele);
 					}
 				}

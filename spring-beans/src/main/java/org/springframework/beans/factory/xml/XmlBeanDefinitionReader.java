@@ -507,10 +507,15 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 * @see BeanDefinitionDocumentReader#registerBeanDefinitions
 	 */
 	public int registerBeanDefinitions(Document doc, Resource resource) throws BeanDefinitionStoreException {
-		BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();//构建读取Document的工具类
-		int countBefore = getRegistry().getBeanDefinitionCount(); //获取已注册的bean数量
-		documentReader.registerBeanDefinitions(doc, createReaderContext(resource));//注册 Bean 定义
-		return getRegistry().getBeanDefinitionCount() - countBefore; //总注册的bean减去之前注册的bean就是本次注册的bean
+		// 构建读取Document的工具类
+		BeanDefinitionDocumentReader documentReader = createBeanDefinitionDocumentReader();
+		// 获取已注册的bean数量
+		int countBefore = getRegistry().getBeanDefinitionCount();
+		// createReaderContext(resource) 会把spring.handler加载出来
+		// 注册 Bean 定义
+		documentReader.registerBeanDefinitions(doc, createReaderContext(resource));
+		// 总注册的bean减去之前注册的bean就是本次注册的bean
+		return getRegistry().getBeanDefinitionCount() - countBefore;
 	}
 
 	/**
@@ -537,6 +542,7 @@ public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 	 */
 	public NamespaceHandlerResolver getNamespaceHandlerResolver() {
 		if (this.namespaceHandlerResolver == null) {
+			// 把spring.handler读取出来
 			this.namespaceHandlerResolver = createDefaultNamespaceHandlerResolver();
 		}
 		return this.namespaceHandlerResolver;

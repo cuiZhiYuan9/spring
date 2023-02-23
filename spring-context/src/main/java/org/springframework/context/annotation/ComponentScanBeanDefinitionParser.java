@@ -80,14 +80,17 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 	@Override
 	@Nullable
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
+		// 获取 base-package的属性值
 		String basePackage = element.getAttribute(BASE_PACKAGE_ATTRIBUTE);
 		basePackage = parserContext.getReaderContext().getEnvironment().resolvePlaceholders(basePackage);
 		String[] basePackages = StringUtils.tokenizeToStringArray(basePackage,
 				ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
 
 		// Actually scan for bean definitions and register them.
+		// 实际扫描 Bean 定义并注册它们。
 		ClassPathBeanDefinitionScanner scanner = configureScanner(parserContext, element);
 		Set<BeanDefinitionHolder> beanDefinitions = scanner.doScan(basePackages);
+		// 注册 处理@AutoWried等注解的内部bean
 		registerComponents(parserContext.getReaderContext(), beanDefinitions, element);
 
 		return null;
@@ -100,15 +103,23 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 		}
 
 		// Delegate bean definition registration to scanner class.
+		// 将 Bean 定义注册委托给扫描程序类。
+		// 创建扫描器
+		/*
+		一个 Bean 定义扫描程序，用于检测类路径上的候选 Bean，向给定的注册表（ 或 ApplicationContext）BeanFactory注册相应的 Bean 定义。
+		候选类通过可配置的类型筛选器进行检测。默认过滤器包括用 Spring 的、、@Repository@Service或@Controller构造型注释的@Component类。
+		还支持 Java EE 6 javax.annotation.ManagedBean 和 JSR-330 的 javax.inject.Named 注解（如果可用）。
+		 */
 		ClassPathBeanDefinitionScanner scanner = createScanner(parserContext.getReaderContext(), useDefaultFilters);
 		scanner.setBeanDefinitionDefaults(parserContext.getDelegate().getBeanDefinitionDefaults());
 		scanner.setAutowireCandidatePatterns(parserContext.getDelegate().getAutowireCandidatePatterns());
-
+		// 解析 resource-pattern
 		if (element.hasAttribute(RESOURCE_PATTERN_ATTRIBUTE)) {
 			scanner.setResourcePattern(element.getAttribute(RESOURCE_PATTERN_ATTRIBUTE));
 		}
 
 		try {
+			// 解析 Bean 名称生成器
 			parseBeanNameGenerator(element, scanner);
 		}
 		catch (Exception ex) {
@@ -116,6 +127,7 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 		}
 
 		try {
+			// 解析是否单例
 			parseScope(element, scanner);
 		}
 		catch (Exception ex) {
@@ -143,22 +155,26 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 		}
 
 		// Register annotation config processors, if necessary.
+		// 如有必要，注册注释配置处理器。
+		// 配置解析@AutoWried等注解
 		boolean annotationConfig = true;
 		if (element.hasAttribute(ANNOTATION_CONFIG_ATTRIBUTE)) {
 			annotationConfig = Boolean.parseBoolean(element.getAttribute(ANNOTATION_CONFIG_ATTRIBUTE));
 		}
 		if (annotationConfig) {
+			// 获取处理@AutoWrited等注解的beanPostProcessor
 			Set<BeanDefinitionHolder> processorDefinitions =
 					AnnotationConfigUtils.registerAnnotationConfigProcessors(readerContext.getRegistry(), source);
 			for (BeanDefinitionHolder processorDefinition : processorDefinitions) {
 				compositeDef.addNestedComponent(new BeanComponentDefinition(processorDefinition));
 			}
 		}
-
+		// 触发组件注册的事件。
 		readerContext.fireComponentRegistered(compositeDef);
 	}
 
 	protected void parseBeanNameGenerator(Element element, ClassPathBeanDefinitionScanner scanner) {
+		// 如果有 name-generator
 		if (element.hasAttribute(NAME_GENERATOR_ATTRIBUTE)) {
 			BeanNameGenerator beanNameGenerator = (BeanNameGenerator) instantiateUserDefinedStrategy(
 					element.getAttribute(NAME_GENERATOR_ATTRIBUTE), BeanNameGenerator.class,
@@ -169,7 +185,9 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 
 	protected void parseScope(Element element, ClassPathBeanDefinitionScanner scanner) {
 		// Register ScopeMetadataResolver if class name provided.
+		// scope-resolver 解析
 		if (element.hasAttribute(SCOPE_RESOLVER_ATTRIBUTE)) {
+			// 不允许同时存在 scoped-proxy
 			if (element.hasAttribute(SCOPED_PROXY_ATTRIBUTE)) {
 				throw new IllegalArgumentException(
 						"Cannot define both 'scope-resolver' and 'scoped-proxy' on <component-scan> tag");

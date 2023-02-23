@@ -205,8 +205,10 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	@SuppressWarnings("unchecked")
 	protected void registerDefaultFilters() {
 		this.includeFilters.add(new AnnotationTypeFilter(Component.class));
+		// 获取类加载器
 		ClassLoader cl = ClassPathScanningCandidateComponentProvider.class.getClassLoader();
 		try {
+			// 添加 ManagedBean
 			this.includeFilters.add(new AnnotationTypeFilter(
 					((Class<? extends Annotation>) ClassUtils.forName("javax.annotation.ManagedBean", cl)), false));
 			logger.trace("JSR-250 'javax.annotation.ManagedBean' found and supported for component scanning");
@@ -215,6 +217,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			// JSR-250 1.1 API (as included in Java EE 6) not available - simply skip.
 		}
 		try {
+			// 添加 Named 已做后续解析
 			this.includeFilters.add(new AnnotationTypeFilter(
 					((Class<? extends Annotation>) ClassUtils.forName("javax.inject.Named", cl)), false));
 			logger.trace("JSR-330 'javax.inject.Named' annotation found and supported for component scanning");
@@ -419,7 +422,9 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		try {
 			String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
 					resolveBasePackage(basePackage) + '/' + this.resourcePattern;
+			// 获取满足通配符下的对象
 			Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
+			// 日志
 			boolean traceEnabled = logger.isTraceEnabled();
 			boolean debugEnabled = logger.isDebugEnabled();
 			for (Resource resource : resources) {
