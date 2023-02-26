@@ -16,31 +16,14 @@
 
 package org.springframework.util;
 
+import org.springframework.lang.Nullable;
+
 import java.beans.Introspector;
 import java.io.Closeable;
 import java.io.Externalizable;
 import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Proxy;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringJoiner;
-
-import org.springframework.lang.Nullable;
+import java.lang.reflect.*;
+import java.util.*;
 
 /**
  * Miscellaneous {@code java.lang.Class} utility methods.
@@ -1260,26 +1243,34 @@ public abstract class ClassUtils {
 	 * @see #getInterfaceMethodIfPossible
 	 */
 	public static Method getMostSpecificMethod(Method method, @Nullable Class<?> targetClass) {
+		// 如果targetClass不为null且targetClass不是声明method的类且method在targetClass中可重写
 		if (targetClass != null && targetClass != method.getDeclaringClass() && isOverridable(method, targetClass)) {
 			try {
+				// 如果method是public方法
 				if (Modifier.isPublic(method.getModifiers())) {
 					try {
+						// 获取targetClass的方法名为method的方法名和参数类型数组为method的参数类型数组的方法对象
 						return targetClass.getMethod(method.getName(), method.getParameterTypes());
 					}
 					catch (NoSuchMethodException ex) {
+						// 捕捉没有找到方法异常,直接返回给定的方法
 						return method;
 					}
 				}
 				else {
+					// 反射获取targetClass的方法名为method的方法名和参数类型数组为method的参数类型数组的方法对象
 					Method specificMethod =
 							ReflectionUtils.findMethod(targetClass, method.getName(), method.getParameterTypes());
+					//如果specificMethod不为null,就返回specificMethod,否则返回给定的方法
 					return (specificMethod != null ? specificMethod : method);
 				}
 			}
 			catch (SecurityException ex) {
 				// Security settings are disallowing reflective access; fall back to 'method' below.
+				// 安全性设置不允许反射式访问；回到下面的'method'
 			}
 		}
+		// 直接返回给定的方法
 		return method;
 	}
 

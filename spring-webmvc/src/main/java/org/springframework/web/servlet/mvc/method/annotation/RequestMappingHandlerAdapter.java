@@ -524,16 +524,20 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 	@Override
 	public void afterPropertiesSet() {
 		// Do this first, it may add ResponseBody advice beans
+		// 初始化注释了@ControllerAdvice的类的相关属性
 		initControllerAdviceCache();
 
+		// 初始化 argumentResolvers 属性
 		if (this.argumentResolvers == null) {
 			List<HandlerMethodArgumentResolver> resolvers = getDefaultArgumentResolvers();
 			this.argumentResolvers = new HandlerMethodArgumentResolverComposite().addResolvers(resolvers);
 		}
+		// 初始化 initBinderArgumentResolvers 属性
 		if (this.initBinderArgumentResolvers == null) {
 			List<HandlerMethodArgumentResolver> resolvers = getDefaultInitBinderArgumentResolvers();
 			this.initBinderArgumentResolvers = new HandlerMethodArgumentResolverComposite().addResolvers(resolvers);
 		}
+		// 初始化 returnValueHandlers 属性
 		if (this.returnValueHandlers == null) {
 			List<HandlerMethodReturnValueHandler> handlers = getDefaultReturnValueHandlers();
 			this.returnValueHandlers = new HandlerMethodReturnValueHandlerComposite().addHandlers(handlers);
@@ -541,36 +545,46 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 	}
 
 	private void initControllerAdviceCache() {
+		// 判断当前应用程序上下文是否为空，如果为空，直接返回
 		if (getApplicationContext() == null) {
 			return;
 		}
 
+		// 扫描@ControllerAdvice注解的Bean，生成对应的ControllerAdviceBean对象，并将进行排序
 		List<ControllerAdviceBean> adviceBeans = ControllerAdviceBean.findAnnotatedBeans(getApplicationContext());
 
 		List<Object> requestResponseBodyAdviceBeans = new ArrayList<>();
 
+		// 遍历ControllerAdviceBean数组
 		for (ControllerAdviceBean adviceBean : adviceBeans) {
 			Class<?> beanType = adviceBean.getBeanType();
 			if (beanType == null) {
 				throw new IllegalStateException("Unresolvable type for ControllerAdviceBean: " + adviceBean);
 			}
+			// 扫描有`@ModelAttribute`，无`@RequestMapping`注解的方法，添加到`modelAttributeAdviceCache`属性中
+			// 该类方法用于在执行方法前修改 Model 对象
 			Set<Method> attrMethods = MethodIntrospector.selectMethods(beanType, MODEL_ATTRIBUTE_METHODS);
 			if (!attrMethods.isEmpty()) {
 				this.modelAttributeAdviceCache.put(adviceBean, attrMethods);
 			}
+			// 扫描有`@InitBinder`注解的方法，添加到`initBinderAdviceCache`属性中
+			// 该类方法用于在执行方法前初始化数据绑定器
 			Set<Method> binderMethods = MethodIntrospector.selectMethods(beanType, INIT_BINDER_METHODS);
 			if (!binderMethods.isEmpty()) {
 				this.initBinderAdviceCache.put(adviceBean, binderMethods);
 			}
+			// 如果是RequestBodyAdvice或ResponseBodyAdvice的子类，添加到requestResponseBodyAdviceBeans中
 			if (RequestBodyAdvice.class.isAssignableFrom(beanType) || ResponseBodyAdvice.class.isAssignableFrom(beanType)) {
 				requestResponseBodyAdviceBeans.add(adviceBean);
 			}
 		}
 
+		// 将requestResponseBodyAdviceBeans添加到this.requestResponseBodyAdvice属性中
 		if (!requestResponseBodyAdviceBeans.isEmpty()) {
 			this.requestResponseBodyAdvice.addAll(0, requestResponseBodyAdviceBeans);
 		}
 
+		// 打印日志
 		if (logger.isDebugEnabled()) {
 			int modelSize = this.modelAttributeAdviceCache.size();
 			int binderSize = this.initBinderAdviceCache.size();
@@ -811,6 +825,7 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 		try {
 			// 创建WebDataBinderFactory对象，此对象用来创建WebDataBinder对象，进行参数绑定，
 			// 实现参数跟String之间的类型转换，ArgumentResolver在进行参数解析的过程中会用到WebDataBinder
+			// 获取所有得@initBinder方法 全局，
 			WebDataBinderFactory binderFactory = getDataBinderFactory(handlerMethod);
 			// 创建ModelFactory对象，此对象主要用来处理model，主要是两个功能，1是在处理器具体处理之前对model进行初始化，2是在处理完请求后对model参数进行更新
 			ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
@@ -926,13 +941,16 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 
 	private WebDataBinderFactory getDataBinderFactory(HandlerMethod handlerMethod) throws Exception {
 		Class<?> handlerType = handlerMethod.getBeanType();
+		// 缓存 看initBinder是否存在
 		Set<Method> methods = this.initBinderCache.get(handlerType);
 		if (methods == null) {
+			// 查看当前controller有那些@InitBinder
 			methods = MethodIntrospector.selectMethods(handlerType, INIT_BINDER_METHODS);
+			// 加在缓存
 			this.initBinderCache.put(handlerType, methods);
 		}
 		List<InvocableHandlerMethod> initBinderMethods = new ArrayList<>();
-		// Global methods first
+		// Global methods first 全局方法优先  也就是@ContolllerAdvice
 		this.initBinderAdviceCache.forEach((controllerAdviceBean, methodSet) -> {
 			if (controllerAdviceBean.isApplicableToBeanType(handlerType)) {
 				Object bean = controllerAdviceBean.resolveBean();
