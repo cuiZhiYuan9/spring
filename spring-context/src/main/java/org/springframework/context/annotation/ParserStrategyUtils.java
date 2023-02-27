@@ -62,6 +62,7 @@ abstract class ParserStrategyUtils {
 		}
 		ClassLoader classLoader = (registry instanceof ConfigurableBeanFactory ?
 				((ConfigurableBeanFactory) registry).getBeanClassLoader() : resourceLoader.getClassLoader());
+		// 实例化 ctor.instance()
 		T instance = (T) createInstance(clazz, environment, resourceLoader, registry, classLoader);
 		ParserStrategyUtils.invokeAwareMethods(instance, environment, resourceLoader, registry, classLoader);
 		return instance;

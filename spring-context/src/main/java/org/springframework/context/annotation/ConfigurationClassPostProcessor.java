@@ -338,10 +338,11 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			// 解析带有@Configuration一系列的注解
 			parser.parse(candidates);
 			parser.validate();
-
+			// 获取用户自定义的配置类所映射的 ConfigurationClass
 			Set<ConfigurationClass> configClasses = new LinkedHashSet<>(parser.getConfigurationClasses());
+			// 去除已经处理过的
 			configClasses.removeAll(alreadyParsed);
-
+			// 读取模型并根据其内容创建 Bean 定义
 			// Read the model and create bean definitions based on its content
 			if (this.reader == null) {
 				this.reader = new ConfigurationClassBeanDefinitionReader(
@@ -377,7 +378,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			}
 		}
 		while (!candidates.isEmpty());
-
+		//  将 ImportRegistry 注册为 Bean 以支持 ImportAware @Configuration类
 		// Register the ImportRegistry as a bean in order to support ImportAware @Configuration classes
 		if (sbr != null && !sbr.containsSingleton(IMPORT_REGISTRY_BEAN_NAME)) {
 			sbr.registerSingleton(IMPORT_REGISTRY_BEAN_NAME, parser.getImportRegistry());

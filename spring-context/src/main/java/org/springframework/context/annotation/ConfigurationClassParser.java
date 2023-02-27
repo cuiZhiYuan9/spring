@@ -246,7 +246,7 @@ class ConfigurationClassParser {
 			}
 		}
 
-		// Recursively process the configuration class and its superclass hierarchy.
+		// Recursively process the configuration class and its superclass hierarchy.递归处理配置类及其超类层次结构。
 		SourceClass sourceClass = asSourceClass(configClass, filter);
 		do {
 			// 解析各种注解 @EnableTransactionManagement @Import等
@@ -330,16 +330,16 @@ class ConfigurationClassParser {
 			}
 		}
 
-		// Process individual @Bean methods
+		// Process individual @Bean methods 处理@Bean方法
 		Set<MethodMetadata> beanMethods = retrieveBeanMethodMetadata(sourceClass);
 		for (MethodMetadata methodMetadata : beanMethods) {
 			configClass.addBeanMethod(new BeanMethod(methodMetadata, configClass));
 		}
 
-		// Process default methods on interfaces
+		// Process default methods on interfaces 处理接口上的默认方法
 		processInterfaces(configClass, sourceClass);
 
-		// Process superclass, if any
+		// Process superclass, if any 进程超类（如果有）
 		if (sourceClass.getMetadata().hasSuperClass()) {
 			String superclass = sourceClass.getMetadata().getSuperClassName();
 			if (superclass != null && !superclass.startsWith("java") &&
@@ -409,6 +409,7 @@ class ConfigurationClassParser {
 	private Set<MethodMetadata> retrieveBeanMethodMetadata(SourceClass sourceClass) {
 		AnnotationMetadata original = sourceClass.getMetadata();
 		Set<MethodMetadata> beanMethods = original.getAnnotatedMethods(Bean.class.getName());
+		// StandardAnnotationMetadata主要使用 Java 反射原理获取元数据，而 AnnotationMetadataReadingVisitor 使用 ASM 框架获取元数据。
 		if (beanMethods.size() > 1 && original instanceof StandardAnnotationMetadata) {
 			// Try reading the class file via ASM for deterministic declaration order...
 			// Unfortunately, the JVM's standard reflection returns methods in arbitrary
@@ -546,7 +547,7 @@ class ConfigurationClassParser {
 	 */
 	private void collectImports(SourceClass sourceClass, Set<SourceClass> imports, Set<SourceClass> visited)
 			throws IOException {
-
+		// 这里会获取类上的所有注解,以判断是否有@import注解
 		if (visited.add(sourceClass)) {
 			for (SourceClass annotation : sourceClass.getAnnotations()) {
 				String annName = annotation.getMetadata().getClassName();
@@ -596,9 +597,11 @@ class ConfigurationClassParser {
 						}
 					}
 					else if (candidate.isAssignable(ImportBeanDefinitionRegistrar.class)) {
+						// @mapperScanner里面注入了 MapperScannerRegistrar  它实现了ImportBeanDefinitionRegistrar接口,可以增加beanDefinition在容器中
 						// Candidate class is an ImportBeanDefinitionRegistrar ->
 						// delegate to it to register additional bean definitions
 						Class<?> candidateClass = candidate.loadClass();
+						//这里会实例化 并且会调aware系列接口
 						ImportBeanDefinitionRegistrar registrar =
 								ParserStrategyUtils.instantiateClass(candidateClass, ImportBeanDefinitionRegistrar.class,
 										this.environment, this.resourceLoader, this.registry);

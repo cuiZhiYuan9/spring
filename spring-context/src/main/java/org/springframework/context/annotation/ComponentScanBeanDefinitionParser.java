@@ -90,7 +90,7 @@ public class ComponentScanBeanDefinitionParser implements BeanDefinitionParser {
 		// 实际扫描 Bean 定义并注册它们。
 		ClassPathBeanDefinitionScanner scanner = configureScanner(parserContext, element);
 		Set<BeanDefinitionHolder> beanDefinitions = scanner.doScan(basePackages);
-		// 注册 处理@AutoWried等注解的内部bean
+		// 注册 处理@AutoWried等注解的内部bean 例如 CommonAnnotationBeanPostProcessor
 		registerComponents(parserContext.getReaderContext(), beanDefinitions, element);
 
 		return null;
