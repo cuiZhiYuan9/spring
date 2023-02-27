@@ -847,7 +847,7 @@ public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter
 
 			// 创建ModelAndViewContainer对象，用于保存model和View对象
 			ModelAndViewContainer mavContainer = new ModelAndViewContainer();
-			// 将flashmap中的数据设置到model中 重定向得参数
+			// 将flashMap中的数据设置到model中 重定向得参数
 			mavContainer.addAllAttributes(RequestContextUtils.getInputFlashMap(request));
 			// 使用modelFactory将sessionAttributes和注释了@ModelAttribute的方法的参数设置到model中
 			modelFactory.initModel(webRequest, mavContainer, invocableMethod);
