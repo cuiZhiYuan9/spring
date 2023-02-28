@@ -21,7 +21,7 @@ public class MvcController {
 	}
 
 	@RequestMapping("/param")
-	public String getParam(Date date, Map<String,Object> map){
+	public String getParam(String date, Map<String,Object> map){
 		System.out.println(date);
 		map.put("a",new Date());
 		return "map";

@@ -95,7 +95,7 @@ public final class ModelFactory {
 	 */
 	public void initModel(NativeWebRequest request, ModelAndViewContainer container, HandlerMethod handlerMethod)
 			throws Exception {
-		// sessionAttributes中取出参数，并合并dao1MavContainer中
+		// sessionAttributes中取出参数，并合并到MavContainer中
 		Map<String, ?> sessionAttributes = this.sessionAttributesHandler.retrieveAttributes(request);
 		container.mergeAttributes(sessionAttributes);
 		// 执行注释了@ModelAttribute得方法并将结果设置到model中
@@ -133,7 +133,7 @@ public final class ModelFactory {
 				continue;
 			}
 
-			// container不包含参数名，执行方法
+			// container不包含参数名，执行方法执行的是@ModelAttaibute标注方法
 			Object returnValue = modelMethod.invokeForRequest(request, container);
 			// 判断返回值是否是void类型，如果是void类型，方法自己将参数设置到model中，不处理
 			// 如果不是void，使用getNameForReturnValue获取参数名，
@@ -143,7 +143,7 @@ public final class ModelFactory {
 				if (!ann.binding()) {
 					container.setBindingDisabled(returnValueName);
 				}
-				// 如果不存在container，添加进去
+				// 如果不存在container，添加进去 也就是你实际调用的方法中不存在@ModelAttrabute所描述的参数
 				if (!container.containsAttribute(returnValueName)) {
 					container.addAttribute(returnValueName, returnValue);
 				}

@@ -1059,7 +1059,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				multipartRequestParsed = (processedRequest != request);
 
 				// Determine handler for the current request.
-				// 获得请求对应的HandlerExecutionChain对象（HandlerMethod和HandlerInterceptor拦截器们）
+				// 获得请求对应的HandlerExecutionChain对象（HandlerMethod和HandlerInterceptor拦截器们）确定是那个controller
 				mappedHandler = getHandler(processedRequest);
 				//  如果获取不到，则根据配置抛出异常或返回404错误
 				if (mappedHandler == null) {
@@ -1068,7 +1068,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				}
 
 				// Determine handler adapter for the current request.
-				// 获得当前handler对应的HandlerAdapter对象
+				// 获得当前handler对应的HandlerAdapter对象 大部分获取得是RequestMappingHandlerAdapter
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
@@ -1335,6 +1335,11 @@ public class DispatcherServlet extends FrameworkServlet {
 	 */
 	protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletException {
 		// 适配器模式
+		/*
+			三种适配器
+			RequestMappingHandleAdapters对应这我们的@Controller
+			其余两个对应我们另外两种标记controller得方法 实现Controller接口，HttpServletController
+		 */
 		if (this.handlerAdapters != null) {
 			for (HandlerAdapter adapter : this.handlerAdapters) {
 				if (adapter.supports(handler)) {

@@ -20,5 +20,18 @@
     文件：<input type="file" name="file"><br><br>
     <input type="submit" value="上传">
   </form>
+
+
+  <form action="/spring_spring_test_main_war_exploded/param" enctype="multipart/form-data" method="get">
+    <label>
+      描述：
+      <input type="text" name="date">
+    </label><br><br>
+    <label>
+      文件：
+      <input type="text" name="map">
+    </label><br><br>
+    <input type="submit" value="param上传">
+  </form>
   </body>
 </html>
