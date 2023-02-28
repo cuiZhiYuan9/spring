@@ -1,6 +1,6 @@
 package org.springframework.mybatis;
 
-import org.mybatis.spring.annotation.MapperScannerRegistrar;
+import org.mybatis.spring.mapper.MapperFactoryBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -19,5 +19,7 @@ public class MybatisTest {
 
 		System.out.println(Arrays.toString(ConfigMybatis.class.getAnnotations()));
 		System.out.println(ConfigMybatis.class.getAnnotation(Import.class));
+
+
 	}
 }
