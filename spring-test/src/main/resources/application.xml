@@ -40,7 +40,8 @@ http://www.springframework.org/schema/beans/spring-beans-2.5.xsd   http://www.sp
 	<bean id="myCalculator" class="org.springframework.aop.service.MyCalculator" >
 		<property name="logUtil" ref="logUtil"/>
 	</bean>-->
-	<context:component-scan base-package="org.springframework.mybatis.configuration"/>
+	<context:component-scan base-package="org.springframework.mybatis"/>
+
 <!--	<aop:config>
 		<aop:aspect ref="logUtil">
 			<aop:pointcut id="myPoint" expression="execution( * org.springframework.aop.service.MyCalculator.*(..))"/>

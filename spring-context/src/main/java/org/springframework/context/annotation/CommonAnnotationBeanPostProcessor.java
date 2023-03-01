@@ -315,6 +315,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 
 	@Override
 	public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+		// 获取所有的@Resource注解
 		InjectionMetadata metadata = findResourceMetadata(beanName, bean.getClass(), pvs);
 		try {
 			metadata.inject(bean, beanName, pvs);
@@ -347,6 +348,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 					if (metadata != null) {
 						metadata.clear(pvs);
 					}
+					// 获取被@Resource修饰的注解
 					metadata = buildResourceMetadata(clazz);
 					this.injectionMetadataCache.put(cacheKey, metadata);
 				}
@@ -364,9 +366,11 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 		Class<?> targetClass = clazz;
 
 		do {
+			// 需要注入的元素
 			final List<InjectionMetadata.InjectedElement> currElements = new ArrayList<>();
-
+			// 回调每一个字段
 			ReflectionUtils.doWithLocalFields(targetClass, field -> {
+				// 解析webService注解
 				if (webServiceRefClass != null && field.isAnnotationPresent(webServiceRefClass)) {
 					if (Modifier.isStatic(field.getModifiers())) {
 						throw new IllegalStateException("@WebServiceRef annotation is not supported on static fields");
@@ -374,12 +378,14 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 					currElements.add(new WebServiceRefElement(field, field, null));
 				}
 				else if (ejbClass != null && field.isAnnotationPresent(ejbClass)) {
+					// 解析ehb
 					if (Modifier.isStatic(field.getModifiers())) {
 						throw new IllegalStateException("@EJB annotation is not supported on static fields");
 					}
 					currElements.add(new EjbRefElement(field, field, null));
 				}
 				else if (field.isAnnotationPresent(Resource.class)) {
+					// 解析@Resource常用 不支持静态字段
 					if (Modifier.isStatic(field.getModifiers())) {
 						throw new IllegalStateException("@Resource annotation is not supported on static fields");
 					}
@@ -388,7 +394,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 					}
 				}
 			});
-
+			// 回调每一个方法
 			ReflectionUtils.doWithLocalMethods(targetClass, method -> {
 				Method bridgedMethod = BridgeMethodResolver.findBridgedMethod(method);
 				if (!BridgeMethodResolver.isVisibilityBridgeMethodPair(method, bridgedMethod)) {

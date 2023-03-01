@@ -1498,7 +1498,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			pvs = newPvs;
 		}
 
-		//工厂是否拥有InstiationAwareBeanPostProcessor
+		//工厂是否拥有InstantiationAwareBeanPostProcessors
 		boolean hasInstAwareBpps = hasInstantiationAwareBeanPostProcessors();
 		//mbd.getDependencyCheck()，默认返回 DEPENDENCY_CHECK_NONE，表示 不检查
 		//是否需要依赖检查

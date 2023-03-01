@@ -116,7 +116,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	/** Package-visible field that indicates a before-instantiation post-processor having kicked in. */
 	@Nullable
 	volatile Boolean beforeInstantiationResolved;
-
+	// 需要被注入的bean集合
 	@Nullable
 	private Set<Member> externallyManagedConfigMembers;
 

@@ -103,6 +103,7 @@ public class InjectionMetadata {
 		for (InjectedElement element : this.injectedElements) {
 			Member member = element.getMember();
 			if (!beanDefinition.isExternallyManagedConfigMember(member)) {
+				// 把当前需要注入的bean放在beanDefinition的externallyManagedConfigMembers中
 				beanDefinition.registerExternallyManagedConfigMember(member);
 				checkedElements.add(element);
 			}
