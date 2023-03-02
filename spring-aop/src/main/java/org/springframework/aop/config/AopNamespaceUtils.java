@@ -69,7 +69,7 @@ public abstract class AopNamespaceUtils {
 				parserContext.getRegistry(), parserContext.extractSource(sourceElement));
 		// 如果指定proxy-target-class为true则使用CGLIB代理，否则使用JDK代理
 		useClassProxyingIfNecessary(parserContext.getRegistry(), sourceElement);
-		// 注册到spring的bean工厂中，再次检校是否主策
+		// 注册到spring的bean工厂中，再次检校是否注册
 		registerComponentIfNecessary(beanDefinition, parserContext);
 	}
 

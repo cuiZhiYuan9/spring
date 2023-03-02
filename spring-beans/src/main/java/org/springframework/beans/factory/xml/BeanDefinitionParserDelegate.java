@@ -412,31 +412,38 @@ public class BeanDefinitionParserDelegate {
 	 */
 	@Nullable
 	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable BeanDefinition containingBean) {
-		String id = ele.getAttribute(ID_ATTRIBUTE);//获取bean 定义的 id
-		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);// 获取name 并且一个bean可以用多个名称：name=“bean1,bean2,bean3”
+		//获取bean 定义的 id
+		String id = ele.getAttribute(ID_ATTRIBUTE);
+		// 获取name 并且一个bean可以用多个名称：name=“bean1,bean2,bean3”
+		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);
 
 		List<String> aliases = new ArrayList<>();
-		if (StringUtils.hasLength(nameAttr)) {// 将 name 属性的定义按照 “逗号、分号、空格” 切分，形成一个 别名列表数组，
+		// 将 name 属性的定义按照 “逗号、分号、空格” 切分，形成一个 别名列表数组
+		if (StringUtils.hasLength(nameAttr)) {
 			String[] nameArr = StringUtils.tokenizeToStringArray(nameAttr, MULTI_VALUE_ATTRIBUTE_DELIMITERS);
 			aliases.addAll(Arrays.asList(nameArr));
 		}
 
 		String beanName = id;
-		if (!StringUtils.hasText(beanName) && !aliases.isEmpty()) {// 如果没有指定id, 那么用别名列表的第一个名字作为beanName
+		// 如果没有指定id, 那么用别名列表的第一个名字作为beanName
+		if (!StringUtils.hasText(beanName) && !aliases.isEmpty()) {
 			beanName = aliases.remove(0);
 			if (logger.isTraceEnabled()) {
 				logger.trace("No XML 'id' specified - using '" + beanName +
 						"' as bean name and " + aliases + " as aliases");
 			}
 		}
-
-		if (containingBean == null) {// 检查名称唯一性
-			checkNameUniqueness(beanName, aliases, ele);//验证指定的 bean 名称和别名尚未在当前级别的 beans 元素嵌套中使用
+		// 检查名称唯一性
+		if (containingBean == null) {
+			//验证指定的 bean 名称和别名尚未在当前级别的 beans 元素嵌套中使用
+			checkNameUniqueness(beanName, aliases, ele);
 		}
 		// 根据 <bean ...>...</bean> 中的配置创建 BeanDefinition，然后把配置中的信息都设置到实例中,
-		AbstractBeanDefinition beanDefinition = parseBeanDefinitionElement(ele, beanName, containingBean);// 这行执行完毕，一个 BeanDefinition 实例就出来了。等下接着往下看
+		// 这行执行完毕，一个 BeanDefinition 实例就出来了。等下接着往下看
+		AbstractBeanDefinition beanDefinition = parseBeanDefinitionElement(ele, beanName, containingBean);
 		if (beanDefinition != null) {
-			if (!StringUtils.hasText(beanName)) {  // 如果有自定义属性的话，进行相应的解析
+			// 如果有自定义属性的话，进行相应的解析
+			if (!StringUtils.hasText(beanName)) {
 				try {
 					if (containingBean != null) {
 						beanName = BeanDefinitionReaderUtils.generateBeanName(
@@ -497,9 +504,9 @@ public class BeanDefinitionParserDelegate {
 	 * {@code null} if problems occurred during the parsing of the bean definition.
 	 */
 	@Nullable
-	public AbstractBeanDefinition parseBeanDefinitionElement(// 最重要的地方，如何根据配置创建 BeanDefinition 实例
+	public AbstractBeanDefinition parseBeanDefinitionElement(
 			Element ele, String beanName, @Nullable BeanDefinition containingBean) {
-
+		// 最重要的地方，如何根据配置创建 BeanDefinition 实例
 		this.parseState.push(new BeanEntry(beanName));
 
 		String className = null;
@@ -511,19 +518,24 @@ public class BeanDefinitionParserDelegate {
 			parent = ele.getAttribute(PARENT_ATTRIBUTE);
 		}
 
-		try { // 创建 BeanDefinition，然后设置类信息
+		try {
+			// 创建 BeanDefinition，然后设置类信息 名字,类型,父bean名字
 			AbstractBeanDefinition bd = createBeanDefinition(className, parent);//就是判空和set方法
 			// 设置 BeanDefinition 的一堆属性，这些属性定义在 AbstractBeanDefinition 中 类似init，懒加载，销毁方法
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
-
-			parseMetaElements(ele, bd);//解析  <meta/>
-			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());//解析 <lookup-method /> 不常用
-			parseReplacedMethodSubElements(ele, bd.getMethodOverrides()); // 解析 <replaced-method /> 替换方法
-
-			parseConstructorArgElements(ele, bd);// 解析 <constructor-arg /> 构造函数参数，用于初始化指定的内部属性
-			parsePropertyElements(ele, bd); // 解析 <property />   属性复制
-			parseQualifierElements(ele, bd); // 解析 <qualifier />  特定 Spring bean 的名称一起进行装配
+			//解析  <meta/>
+			parseMetaElements(ele, bd);
+			//解析 <lookup-method /> 不常用
+			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
+			// 解析 <replaced-method /> 替换方法
+			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
+			// 解析 <constructor-arg /> 构造函数参数，用于初始化指定的内部属性
+			parseConstructorArgElements(ele, bd);
+			// 解析 <property />   属性复制
+			parsePropertyElements(ele, bd);
+			// 解析 <qualifier />  特定 Spring bean 的名称一起进行装配
+			parseQualifierElements(ele, bd);
 
 			bd.setResource(this.readerContext.getResource());
 			bd.setSource(extractSource(ele));

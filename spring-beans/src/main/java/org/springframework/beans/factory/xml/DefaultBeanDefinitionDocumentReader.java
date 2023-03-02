@@ -172,7 +172,8 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 				Node node = nl.item(i);
  				if (node instanceof Element) {
 					Element ele = (Element) node;
-					if (delegate.isDefaultNamespace(ele)) {// 解析 default namespace 下面的几个元素
+					// 解析 default namespace 下面的几个元素
+					if (delegate.isDefaultNamespace(ele)) {
 						parseDefaultElement(ele, delegate);
 					}
 					else { //解析<context:component-scan>
@@ -304,8 +305,10 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 * and registering it with the registry.
 	 */
 	protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate delegate) {
-		BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);//创建beanDefinition,填充属性
-		if (bdHolder != null) {// 如果有自定义属性的话，进行相应的解析
+		// todo 创建beanDefinition,填充属性 比较重要
+		BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);
+		// 如果有自定义属性的话，进行相应的解析
+		if (bdHolder != null) {
 			bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
 			try {
 				// Register the final decorated instance. //注册bean

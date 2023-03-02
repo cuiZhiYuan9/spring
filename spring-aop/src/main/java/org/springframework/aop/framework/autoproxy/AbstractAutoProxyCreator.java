@@ -257,6 +257,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 				return null;
 			}
 			// shouldSkip （） 是否需要被代理   isInfrastructureClass 是否是aop相关的类 Advice  AopInfrastructureBean  Advisor  Pointcut
+			// 在这里的 isInfrastructureClass() 会把当前bean是Advice Pointcut Advisor AopInfrastructureBean 过滤掉 也就是说如若是这几个类型就不会进行后续 shouldSkip处理
 			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
 				this.advisedBeans.put(cacheKey, Boolean.FALSE);
 				return null;

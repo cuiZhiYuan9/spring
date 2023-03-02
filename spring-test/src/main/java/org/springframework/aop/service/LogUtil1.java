@@ -3,14 +3,12 @@ package org.springframework.aop.service;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
-import org.aspectj.lang.annotation.*;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
-//@Aspect
 @Component
-public class LogUtil {
+public class LogUtil1 {
 	//@Pointcut("execution(public Integer com.mashibing.service.MyCalculator.*(Integer,Integer))")
 	public void myPointCut() {
 	}

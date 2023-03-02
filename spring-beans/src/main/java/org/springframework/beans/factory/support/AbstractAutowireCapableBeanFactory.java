@@ -1235,7 +1235,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// 没有参数
 		if (args == null) {
 			synchronized (mbd.constructorArgumentLock) {
-				// 一个类可以后多个构造函数，所以需要根据配置文件中得参数配置，或闯入的参数来确定最终调用得构造函数
+				// 一个类可以后多个构造函数，所以需要根据配置文件中得参数配置，或传入的参数来确定最终调用得构造函数
 				// 因为判断过程会比较，所以spring会将解析，确定好的构造函数缓存到BeanDefinition中的resolvedConstructorOrFactoryMethod字段中
 				// 在下次创建相同得rootBeanDefinition中的resolvedConstructorOrFactoryMethod缓存值得或缺
 				if (mbd.resolvedConstructorOrFactoryMethod != null) {
