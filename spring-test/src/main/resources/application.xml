@@ -2,9 +2,8 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xmlns:context="http://www.springframework.org/schema/context"
-	   xmlns:aop="http://www.springframework.org/schema/aop"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans
-http://www.springframework.org/schema/beans/spring-beans-2.5.xsd   http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+http://www.springframework.org/schema/beans/spring-beans-2.5.xsd   http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
 
 
 
@@ -41,9 +40,9 @@ http://www.springframework.org/schema/beans/spring-beans-2.5.xsd   http://www.sp
 	<bean id="myCalculator" class="org.springframework.aop.service.MyCalculator" >
 		<property name="logUtil" ref="logUtil"/>
 	</bean>
-	<context:component-scan base-package="org.springframework.mybatis"/>
+	<context:component-scan base-package="org.springframework.aop"/>
 
-	<aop:config>
+<!--	<aop:config>
 		<aop:aspect ref="logUtil">
 			<aop:pointcut id="myPoint" expression="execution( * org.springframework.aop.service.MyCalculator.*(..))"/>
 			<aop:around method="around" pointcut-ref="myPoint"/>
@@ -52,7 +51,7 @@ http://www.springframework.org/schema/beans/spring-beans-2.5.xsd   http://www.sp
 			<aop:after-returning method="stop" pointcut-ref="myPoint" returning="result"/>
 			<aop:after-throwing method="logException" pointcut-ref="myPoint" throwing="e"/>
 		</aop:aspect>
-	</aop:config>
+	</aop:config>-->
 
 <!--	<aop:aspectj-autoproxy/>-->
 

@@ -16,18 +16,8 @@
 
 package org.springframework.beans.factory.xml;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.parsing.BeanComponentDefinition;
@@ -38,6 +28,15 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Default implementation of the {@link BeanDefinitionDocumentReader} interface that
@@ -93,7 +92,8 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	@Override
 	public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
 		this.readerContext = readerContext;
-		doRegisterBeanDefinitions(doc.getDocumentElement());//解析bean定义
+		// 解析bean定义
+		doRegisterBeanDefinitions(doc.getDocumentElement());
 	}
 
 	/**
@@ -145,9 +145,12 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			}
 		}
 
-		preProcessXml(root);//前置扩展点，在把bean转为beanDefinition之前，默认空实现 如需继承DefaultBeanDefinitionDocumentReader
-		parseBeanDefinitions(root, this.delegate);//核心方法
-		postProcessXml(root);//后置扩展点，转为beanDefinition之后
+		// 前置扩展点，在把bean转为beanDefinition之前，默认空实现 如需继承DefaultBeanDefinitionDocumentReader
+		preProcessXml(root);
+		// 核心方法
+		parseBeanDefinitions(root, this.delegate);
+		// 后置扩展点，转为beanDefinition之后
+		postProcessXml(root);
 
 		this.delegate = parent;
 	}
@@ -166,7 +169,8 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 * @param root the DOM root element of the document
 	 */
 	protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
-		if (delegate.isDefaultNamespace(root)) {// default namespace 涉及到的就四个标签 <import />、<alias />、<bean /> 和 <beans />
+		// default namespace 涉及到的就四个标签 <import />、<alias />、<bean /> 和 <beans />
+		if (delegate.isDefaultNamespace(root)) {
 			NodeList nl = root.getChildNodes();
 			for (int i = 0; i < nl.getLength(); i++) {
 				Node node = nl.item(i);
@@ -176,7 +180,8 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 					if (delegate.isDefaultNamespace(ele)) {
 						parseDefaultElement(ele, delegate);
 					}
-					else { //解析<context:component-scan>
+					else {
+						// 解析<context:component-scan>
 						delegate.parseCustomElement(ele);
 					}
 				}

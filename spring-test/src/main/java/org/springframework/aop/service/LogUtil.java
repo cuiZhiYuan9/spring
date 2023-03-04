@@ -15,11 +15,11 @@ public class LogUtil {
 	public void myPointCut() {
 	}
 
-	//@Pointcut("execution(* *(..))")
+	@Pointcut("execution(* *(..))")
 	public void myPointCut1() {
 	}
 
-	//@Before(value = "myPointCut()")
+	@Before(value = "myPointCut()")
 	private int start(JoinPoint joinPoint) {
 		//获取方法签名
 		Signature signature = joinPoint.getSignature();
@@ -29,26 +29,26 @@ public class LogUtil {
 		return 100;
 	}
 
-	//@AfterReturning(value = "myPointCut()", returning = "result")
+	@AfterReturning(value = "myPointCut()", returning = "result")
 	public static void stop(JoinPoint joinPoint, Object result) {
 		Signature signature = joinPoint.getSignature();
 		System.out.println("log---" + signature.getName() + "方法执行结束，结果是：" + result);
 	}
 
-	//@AfterThrowing(value = "myPointCut()", throwing = "e")
+	@AfterThrowing(value = "myPointCut()", throwing = "e")
 	public static void logException(JoinPoint joinPoint, Exception e) {
 		Signature signature = joinPoint.getSignature();
 		System.out.println("log---" + signature.getName() + "方法抛出异常：" + e.getMessage());
 	}
 
-	//@After("myPointCut()")
+	@After("myPointCut()")
 	public static void logFinally(JoinPoint joinPoint) {
 		Signature signature = joinPoint.getSignature();
 		System.out.println("log---" + signature.getName() + "方法执行结束。。。。。over");
 
 	}
 
-	// @Around("myPointCut()")
+	@Around("myPointCut()")
 	public Object around(ProceedingJoinPoint pjp) throws Throwable {
 		Signature signature = pjp.getSignature();
 		Object[] args = pjp.getArgs();
