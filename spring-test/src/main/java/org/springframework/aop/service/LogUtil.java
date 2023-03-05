@@ -8,15 +8,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
-//@Aspect
+@Aspect
 @Component
 public class LogUtil {
-	//@Pointcut("execution(public Integer com.mashibing.service.MyCalculator.*(Integer,Integer))")
-	public void myPointCut() {
-	}
 
 	@Pointcut("execution(* *(..))")
-	public void myPointCut1() {
+	public void myPointCut() {
 	}
 
 	@Before(value = "myPointCut()")

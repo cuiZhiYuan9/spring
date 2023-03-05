@@ -91,6 +91,7 @@ final class PostProcessorRegistrationDelegate {
 			List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
 			// 首先，调用实现 PriorityOrdered 的 BeanDefinitionRegistryPostProcessor。
 			// First, invoke the BeanDefinitionRegistryPostProcessors that implement PriorityOrdered.  找到所有实现BeanDefinitionRegistryPostProcessor接口的beanName
+			// 当你使用<Component-scan>会注入ConfigurationClassPostProcessor,这个是处理@Configuration,@Component,@Import等注解的类，很重要
 			String[] postProcessorNames =
 					beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
 			for (String ppName : postProcessorNames) {

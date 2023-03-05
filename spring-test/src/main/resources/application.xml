@@ -36,10 +36,10 @@ http://www.springframework.org/schema/beans/spring-beans-2.5.xsd   http://www.sp
 -->
 <!--	<context:component-scan base-package="org.springframework.scan"/>-->
 
-	<bean id="logUtil" class="org.springframework.aop.service.LogUtil"/>
+<!--	<bean id="logUtil" class="org.springframework.aop.service.LogUtil"/>
 	<bean id="myCalculator" class="org.springframework.aop.service.MyCalculator" >
 		<property name="logUtil" ref="logUtil"/>
-	</bean>
+	</bean>-->
 	<context:component-scan base-package="org.springframework.aop"/>
 
 <!--	<aop:config>

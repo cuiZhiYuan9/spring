@@ -2,10 +2,14 @@ package org.springframework.aop.service;
 
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+
 @Component
 public class MyCalculator {
 
+	@Resource
 	private LogUtil logUtil;
+
 	public Integer add(Integer i, Integer j) {
 		return i + j;
 	}
@@ -27,8 +31,5 @@ public class MyCalculator {
 		return i;
 	}
 
-	public void setLogUtil(LogUtil logUtil) {
-		this.logUtil = logUtil;
-	}
 }
 
