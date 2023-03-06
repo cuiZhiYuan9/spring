@@ -1,5 +1,6 @@
 package org.springframework;
 
+import org.springframework.aop.service.DoubleTargetClass;
 import org.springframework.aop.service.LogUtil;
 import org.springframework.aop.service.MyCalculator;
 import org.springframework.cglib.core.DebuggingClassWriter;

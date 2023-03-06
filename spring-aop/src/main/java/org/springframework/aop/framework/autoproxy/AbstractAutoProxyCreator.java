@@ -257,7 +257,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 				return null;
 			}
 			// shouldSkip （） 是否需要被代理   isInfrastructureClass 是否是aop相关的类 Advice  AopInfrastructureBean  Advisor  Pointcut
-			// 在这里的 isInfrastructureClass() 会把当前bean是Advice Pointcut Advisor AopInfrastructureBean 过滤掉 也就是说如若是这几个类型就不会进行后续 shouldSkip处理
+			// 在这里的 isInfrastructureClass() 会把当前bean是Advice Pointcut Advisor AopInfrastructureBean  或者加了@Aspect注解 过滤掉 也就是说如若是这几个类型就不会进行后续 shouldSkip处理
 			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
 				this.advisedBeans.put(cacheKey, Boolean.FALSE);
 				return null;
@@ -362,7 +362,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		}
 
 		// Create proxy if we have advice.
-		// 获取当前bean的advices,和advice
+		// 获取当前bean的advices,和advice 也就是获取我们的责任链并且已经按照拓扑排序后的结果返回
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		// 对他的代理状态进行缓存
 		if (specificInterceptors != DO_NOT_PROXY) {
@@ -491,7 +491,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 				evaluateProxyInterfaces(beanClass, proxyFactory);
 			}
 		}
-		// 构建增强器
+		// 构建增强器,也就是我们的拦截器
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
 		proxyFactory.addAdvisors(advisors);
 		// 设置到要代理的类
