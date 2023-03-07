@@ -1,13 +1,10 @@
 package org.springframework.conditional;
 
-import org.springframework.context.annotation.Condition;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.conditional.condition.TestCon;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.stereotype.Component;
 
-public class ConditionalTest implements Condition {
-	@Override
-	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-
-		return true;
-	}
+@Conditional(TestCon.class)
+@Component
+public class ConditionalTest {
 }

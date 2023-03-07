@@ -41,7 +41,7 @@ http://www.springframework.org/schema/beans/spring-beans-2.5.xsd   http://www.sp
 	<bean id="myCalculator" class="org.springframework.aop.service.MyCalculator" >
 &lt;!&ndash;		<property name="logUtil" ref="logUtil"/>&ndash;&gt;
 	</bean>-->
-	<context:component-scan base-package="org.springframework.aop"/>
+	<context:component-scan base-package="org.springframework.conditional"/>
 
 <!--	<aop:config>
 		<aop:aspect ref="logUtil">

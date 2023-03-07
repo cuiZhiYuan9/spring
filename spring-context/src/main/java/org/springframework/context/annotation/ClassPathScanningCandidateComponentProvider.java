@@ -317,6 +317,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			return addCandidateComponentsFromIndex(this.componentsIndex, basePackage);
 		}
 		else {
+			// 在这里会过滤@Conditional注解
 			return scanCandidateComponents(basePackage);
 		}
 	}
