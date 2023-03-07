@@ -332,9 +332,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		ConfigurationClassParser parser = new ConfigurationClassParser(
 				this.metadataReaderFactory, this.problemReporter, this.environment,
 				this.resourceLoader, this.componentScanBeanNameGenerator, registry);
-
-		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates); // 对之前加入的configCandidates进行去重
-		Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size()); // 判断是否已经处理过了
+		// 对之前加入的configCandidates进行去重
+		Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
+		// 判断是否已经处理过了
+		Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size());
 		do {
 			// 解析带有@Configuration一系列的注解
 			parser.parse(candidates);
