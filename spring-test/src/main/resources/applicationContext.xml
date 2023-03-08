@@ -12,6 +12,7 @@
 
     <context:component-scan base-package="org.springframework.mvc"/>
     <mvc:default-servlet-handler/>
+	<!--开启注解形式-->
     <mvc:annotation-driven/>
     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
         <property name="suffix" value=".jsp"/>

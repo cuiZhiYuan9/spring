@@ -62,9 +62,13 @@ public abstract class MvcNamespaceUtils {
 
 
 	public static void registerDefaultComponents(ParserContext parserContext, @Nullable Object source) {
+		// 注册BeanNameUrlHandlerMapping
 		registerBeanNameUrlHandlerMapping(parserContext, source);
+		// 注册 HttpRequestHandlerAdapter
 		registerHttpRequestHandlerAdapter(parserContext, source);
+		// 注册 SimpleControllerHandlerAdapter
 		registerSimpleControllerHandlerAdapter(parserContext, source);
+		// 注册HandlerMappingIntrospector
 		registerHandlerMappingIntrospector(parserContext, source);
 	}
 

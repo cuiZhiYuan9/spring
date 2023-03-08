@@ -1404,6 +1404,14 @@ public class BeanDefinitionParserDelegate {
 			return null;
 		}
 		// 调用自定义的NameScarpHandler进行解析
+		/*
+			例如:在构建mvc容器的时候会使用<mvc:default-servlet-handler/>
+			这里会注册一些mvc的beanDefinition
+			注册 BeanNameUrlHandlerMapping
+			注册 HttpRequestHandlerAdapter
+			注册 SimpleControllerHandlerAdapter
+			注册HandlerMappingIntrospector
+		 */
 		return handler.parse(ele, new ParserContext(this.readerContext, this, containingBd));
 	}
 

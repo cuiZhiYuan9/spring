@@ -200,7 +200,7 @@ class AnnotationDrivenBeanDefinitionParser implements BeanDefinitionParser {
 		context.pushContainingComponent(compDefinition);
 
 		RuntimeBeanReference contentNegotiationManager = getContentNegotiationManager(element, source, context);
-
+		// 注册RequestMappingHandlerMapping
 		RootBeanDefinition handlerMappingDef = new RootBeanDefinition(RequestMappingHandlerMapping.class);
 		handlerMappingDef.setSource(source);
 		handlerMappingDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);

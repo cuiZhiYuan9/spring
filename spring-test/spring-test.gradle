@@ -91,7 +91,6 @@ dependencies {
 	// https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload
 	implementation group: 'commons-fileupload', name: 'commons-fileupload', version: '1.4'
 	// https://mvnrepository.com/artifact/org.apache.dubbo/dubbo
-	implementation group: 'org.apache.dubbo', name: 'dubbo', version: '2.7.18'
 
 }
 

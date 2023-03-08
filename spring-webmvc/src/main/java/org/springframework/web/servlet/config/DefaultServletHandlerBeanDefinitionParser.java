@@ -48,28 +48,38 @@ class DefaultServletHandlerBeanDefinitionParser implements BeanDefinitionParser 
 	@Nullable
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
 		Object source = parserContext.extractSource(element);
-
+		// 获取属性 default-servlet-name
 		String defaultServletName = element.getAttribute("default-servlet-name");
+		// 默认的Servlet
 		RootBeanDefinition defaultServletHandlerDef = new RootBeanDefinition(DefaultServletHttpRequestHandler.class);
 		defaultServletHandlerDef.setSource(source);
+		// 框架内部的bean
 		defaultServletHandlerDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
 		if (StringUtils.hasText(defaultServletName)) {
 			defaultServletHandlerDef.getPropertyValues().add("defaultServletName", defaultServletName);
 		}
+		// 默认的名字
 		String defaultServletHandlerName = parserContext.getReaderContext().generateBeanName(defaultServletHandlerDef);
+		// 注册beanDefinition
 		parserContext.getRegistry().registerBeanDefinition(defaultServletHandlerName, defaultServletHandlerDef);
-		parserContext.registerComponent(new BeanComponentDefinition(defaultServletHandlerDef, defaultServletHandlerName));
 
+		parserContext.registerComponent(new BeanComponentDefinition(defaultServletHandlerDef, defaultServletHandlerName));
+		// 拦截所有的请求
 		Map<String, String> urlMap = new ManagedMap<>();
 		urlMap.put("/**", defaultServletHandlerName);
 
 		RootBeanDefinition handlerMappingDef = new RootBeanDefinition(SimpleUrlHandlerMapping.class);
+
 		handlerMappingDef.setSource(source);
+		// 框架内部bean,后续不许要被代理
 		handlerMappingDef.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+
 		handlerMappingDef.getPropertyValues().add("urlMap", urlMap);
 
 		String handlerMappingBeanName = parserContext.getReaderContext().generateBeanName(handlerMappingDef);
+		// 注册beanDefinition
 		parserContext.getRegistry().registerBeanDefinition(handlerMappingBeanName, handlerMappingDef);
+
 		parserContext.registerComponent(new BeanComponentDefinition(handlerMappingDef, handlerMappingBeanName));
 
 		// Ensure BeanNameUrlHandlerMapping (SPR-8289) and default HandlerAdapters are not "turned off"
